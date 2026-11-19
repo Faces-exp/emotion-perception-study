@@ -30,9 +30,11 @@ test('Pages binds browser fetch to its window context',async()=>{
 });
 test('Pages persists one randomized test session and final JSON with all 48 trial rows and score',async()=>{
   const f=fixture(),s=await completeTrials(f.store);assert.equal(s.condition,'no_power');assert.equal(s.is_test,true);
+  await f.store.partial({kind:'navigation',phase:'main',trial_number:48,next_clicked_at:'2026-11-19T18:00:00Z',rt_ms:200});
   const result=await f.store.call('complete',{allow_use:true});assert.equal(result.saved,true);assert.equal(f.writes.length,1);
   const payload=JSON.parse(f.writes[0].data);assert.equal(payload.events.filter(e=>e.phase==='main').length,48);assert.equal(payload.events.filter(e=>e.phase==='practice').length,4);
   assert.equal(payload.summary.n_correct,24);assert.equal(payload.summary.accuracy_percent,50);assert.equal(payload.is_test,true);assert.match(f.writes[0].filename,/^TEST_/);assert.equal(payload.status,'complete');assert.ok(f.staged.length>=55);
+  assert.equal(payload.session.status,'complete');assert.equal(payload.technical_journal[0].kind,'navigation');assert.equal(payload.main_trials[47].rt_ms,200);
   const restored=new BrowserStore({storage:f.storage,pipe:{},fetcher:()=>{}});assert.equal((await restored.call('session')).status,'complete');assert.equal(restored.session.session_id,s.session_id);
 });
 test('Pages retains an immutable final payload after a network failure and retries without changing RTs',async()=>{
