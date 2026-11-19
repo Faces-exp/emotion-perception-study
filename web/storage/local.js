@@ -7,5 +7,5 @@ export class LocalStore {
   }
   mediaURL(stim){return new URL('../../media/'+stim.id+'.mp4',import.meta.url).href;}
   async partial(row){try{await this.call('checkpoint',row);}catch{};}
-  exportURL(format){return new URL('../../api/export'+(format==='csv'?'?format=csv&phase=main':''),import.meta.url).href;}
+  exportURL(kind){return new URL('../../api/export?format=csv&kind='+(kind==='participant'?'participant':'trials'),import.meta.url).href;}
 }

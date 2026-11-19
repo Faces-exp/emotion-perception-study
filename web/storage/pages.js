@@ -1,8 +1,8 @@
-import {RU} from '../content/ru.js';
-import {EXPERIMENT} from '../config/experiment.js';
-import {VERSION,shuffle,validateEvent,csv,hash} from '../study-core.js';
-const KEY='pedfe-session-v2';
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+import {RU} from '../content/ru.js?v=0.3.0';
+import {EXPERIMENT} from '../config/experiment.js?v=0.3.0';
+import {VERSION,shuffle,validateEvent,hash} from '../study-core.js?v=0.3.0';
+import {buildCSVExports,csv,resultFilenames} from '../results.js?v=0.3.0';
+const KEY='pedfe-session-v3';
 export class BrowserStore {
   constructor({storage=globalThis.localStorage,pipe=globalThis.DataPipe,fetcher=globalThis.fetch}={}){
     this.provider='datapipe';this.storage=storage;this.pipe=pipe;this.fetcher=fetcher.bind(globalThis);this.stream=null;
@@ -12,7 +12,7 @@ export class BrowserStore {
   persist(){try{this.storage.setItem(KEY,JSON.stringify(this.session));}catch{throw Error(RU.errors.storage);}}
   experimentID(){return this.session?.is_test?EXPERIMENT.datapipe.test_experiment_id:EXPERIMENT.datapipe.experiment_id;}
   startStream(){
-    if(this.stream||!this.session||this.session.status!=='active'||!EXPERIMENT.datapipe.streaming||!this.experimentID()||!this.pipe)return;
+    if(this.stream||!this.session||!['active','submitting'].includes(this.session.status)||!EXPERIMENT.datapipe.streaming||!this.experimentID()||!this.pipe)return;
     this.stream=this.pipe.createSession({experiment_id:this.experimentID(),filename:this.session.filename});
     const activeStream=this.stream;Promise.resolve(activeStream.ready?.()).then(()=>{if(this.stream===activeStream){this.session.streaming_enabled=activeStream.enabled===true;this.persist();}}).catch(()=>{});
     // On a resumed page, replay the local journal into this new staging session.
@@ -37,7 +37,8 @@ export class BrowserStore {
       const forced=this.test?new URL(location.href).searchParams.get('condition'):null;
       const condition=['high_power','no_power'].includes(forced)?forced:(crypto.getRandomValues(new Uint8Array(1))[0]<128?'high_power':'no_power');
       this.session={session_id:sid,participant_id:id,condition,assignment_method:forced?'test_only_forced':'crypto_bernoulli_p_0.5',started_at:new Date().toISOString(),status:'active',consent:true,adult:true,consent_version:VERSION,study_version:VERSION,procedure_version:VERSION,
-        retention_until:EXPERIMENT.retention_until,purpose:'educational',check_pre_required:EXPERIMENT.manipulation_check_before,check_post_required:EXPERIMENT.manipulation_check_after,manifest_version:m.version,main:shuffle(m.main),practice:shuffle(m.practice),events:{},journal:[],is_test:this.test,media_mode:'pedfe',run_mode:this.test?'test':'production',filename:(this.test?'TEST_':'participant_')+sid+'.json'};
+        retention_until:EXPERIMENT.retention_until,purpose:'educational',manifest_version:m.version,main:shuffle(m.main),practice:shuffle(m.practice),events:{},journal:[],is_test:this.test,media_mode:'pedfe',run_mode:this.test?'test':'production'};
+      this.session.filename=resultFilenames(this.session).trials;
       this.persist();this.startStream();return this.publicSession();
     }
     if(!this.session)throw Error(RU.errors.sessionExpired);
@@ -49,20 +50,29 @@ export class BrowserStore {
       this.session.events[data.key]=row;this.persist();this.startStream();this.stream?.record(row);return {saved:true,row};
     }
     if(path==='complete'){
-      if(data.allow_use!==true||!this.session.events.role||(this.session.check_pre_required&&!this.session.events.check_pre)||(this.session.check_post_required&&!this.session.events.check_post)||['main','practice'].some(phase=>this.session[phase].some((_,i)=>!this.session.events[phase+'-'+(i+1)])))throw Error(RU.server.message_41);
-      if(!this.session.submission){
+      if(data.allow_use!==true||!this.session.events.role||!this.session.events.final_survey||['main','practice'].some(phase=>this.session[phase].some((_,i)=>!this.session.events[phase+'-'+(i+1)])))throw Error(RU.server.message_41);
+      if(!this.session.submissions){
         const rows=Object.values(this.session.events),main=rows.filter(r=>r.phase==='main');const correct=main.reduce((sum,r)=>sum+r.correct,0);
         this.session.summary={n_main:main.length,n_correct:correct,accuracy_percent:correct/48*100};
         this.session.completed_at=new Date().toISOString();this.session.allow_use_after_debrief=true;this.session.status='submitting';
-        const payload=this.exportData('complete');this.session.submission={filename:this.session.filename,data:JSON.stringify(payload)};this.persist();
+        this.session.submissions=buildCSVExports({...this.session,status:'complete'},this.session.events,this.session.journal);this.session.submission_receipts={};this.persist();
       }
-      const result=await this.submit(this.session.submission);
+      // The participant CSV is the completion marker and is sent only after trials.
+      // Persist each receipt so retrying a failed second file never resends the first.
+      this.startStream();
+      for(const submission of this.session.submissions){
+        if(this.session.submission_receipts[submission.filename])continue;
+        this.session.submission_receipts[submission.filename]=await this.submit(submission,{final:submission.kind==='participant'});this.persist();
+      }
+      await this.stream?.close({submitted:true});this.stream=null;
+      const result={confirmed:true,queued:Object.values(this.session.submission_receipts).some(r=>r.queued),files:this.session.submission_receipts};
       this.session.status='complete';this.session.delivery=result;this.persist();return {saved:true,receipt:result.queued?RU.saving.queued:RU.complete.receipt,summary:this.session.summary};
     }
     if(path==='withdraw'){
-      const payload={study_version:VERSION,session_id:this.session.session_id,participant_id:this.session.participant_id,is_test:this.session.is_test,status:'withdrawn',allow_use_after_debrief:false,events:[],withdrawn_at:new Date().toISOString()};
-      await this.submit({filename:'withdrawal_'+this.session.session_id+'.json',data:JSON.stringify(payload)});
-      this.session.status='withdrawn';this.session.events={};this.session.journal=[];this.session.submission=null;this.persist();return {deleted:false,withdrawn:true};
+      const payload={study_version:VERSION,session_id:this.session.session_id,participant_id:this.session.participant_id,is_test:this.session.is_test,status:'withdrawn',allow_use_after_debrief:false,withdrawn_at:new Date().toISOString()};
+      await this.submit({filename:(this.session.is_test?'TEST_':'')+'withdrawal_'+this.session.session_id+'.csv',data:csv([payload])},{final:true});
+      await this.stream?.close({submitted:true});this.stream=null;
+      this.session.status='withdrawn';this.session.events={};this.session.journal=[];this.session.submissions=null;this.persist();return {deleted:false,withdrawn:true};
     }
     if(path==='new-test'){if(!this.session.is_test)throw Error(RU.server.message_37);this.storage.removeItem(KEY);this.session=null;return {reset:true};}
     throw Error(RU.errors.generic);
@@ -70,18 +80,16 @@ export class BrowserStore {
   publicSession(){return {...this.session,active:true};}
   mediaURL(stim){return new URL('../stimuli/'+stim.web_filename,import.meta.url).href;}
   async partial(row){if(!this.session||this.session.status!=='active')return;this.session.pending_trial=row;this.session.journal.push({...row,recorded_at:new Date().toISOString()});this.persist();this.startStream();this.stream?.record({...row,kind:'technical_checkpoint',is_test:this.session.is_test,session_id:this.session.session_id});}
-  exportData(status=this.session.status){const events=Object.values(this.session.events||{});return {schema_version:'pedfe-0.2.0',study_version:VERSION,is_test:this.session.is_test,status,session:{...Object.fromEntries(Object.entries(this.session).filter(([key])=>!['events','journal','submission','pending_trial','delivery'].includes(key))),status},summary:this.session.summary||null,main_trials:events.filter(r=>r.phase==='main'),practice_trials:events.filter(r=>r.phase==='practice'),manipulation:events.find(r=>r.event_key==='role')||null,power_checks:{before:events.find(r=>r.event_key==='check_pre')||null,after:events.find(r=>r.event_key==='check_post')||null},events,technical_journal:this.session.journal||[]};}
-  exportURL(format){const data=this.exportData();return URL.createObjectURL(new Blob([format==='csv'?csv(data.main_trials):JSON.stringify(data,null,2)],{type:format==='csv'?'text/csv;charset=utf-8':'application/json;charset=utf-8'}));}
-  async submit(submission){
-    const priorAttempt=this.session.submission_attempted===true;this.session.submission_attempted=true;this.persist();
-    const result=await this.pipe.saveData({experiment_id:this.experimentID(),filename:submission.filename,data:submission.data,session:this.stream});
+  exportURL(kind){const submission=(this.session.submissions||buildCSVExports(this.session,this.session.events,this.session.journal)).find(file=>file.kind===kind);return URL.createObjectURL(new Blob([submission.data],{type:'text/csv;charset=utf-8'}));}
+  async submit(submission,{final=false}={}){
+    this.session.submission_attempts??={};const priorAttempt=this.session.submission_attempts[submission.filename]===true;this.session.submission_attempts[submission.filename]=true;this.persist();
+    const result=await this.pipe.saveData({experiment_id:this.experimentID(),filename:submission.filename,data:submission.data,session:final?this.stream:undefined});
     // A stable UUID filename and immutable payload make a retry safe. A duplicate
     // after an ambiguous network failure is handled explicitly, never overwritten.
     if(!result.ok){
       const duplicate=['FILE_EXISTS','OSF_FILE_EXISTS'].includes(result.body?.error);
       if(!(duplicate&&priorAttempt))throw Error(RU.errors.generic+' '+(result.body?.error||'HTTP '+result.status));
     }
-    await this.stream?.close({submitted:true});this.stream=null;
     return {confirmed:true,queued:result.status===202,duplicate:!result.ok,filename:submission.filename,status:result.status};
   }
 }

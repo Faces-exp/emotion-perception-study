@@ -1,57 +1,63 @@
-# Схема данных
+# Данные процедуры 0.3 · CSV
 
-Каждая сессия содержит один `participant_id`, один `session_id`, одну `condition`. Эти значения автоматически включены в строки для удобного объединения; участник не вводит их повторно. Сессионная cookie — отдельный секрет доступа и в выгрузку не включена.
+Один participant_id задаётся в начале, condition назначается один раз. session_id — UUID сессии. Новые завершённые прохождения создают два CSV UTF-8 с BOM; UUID входит в имена, чтобы одинаковые participant_id не перезаписывали файлы.
 
-| Поле | Значение |
+## trials_<participant_id>_<session_id>.csv
+
+Ровно 48 строк, отсортированных по порядку предъявления. Поля genuine/posed — стабильные коды, подписи на русском находятся в дополнительных столбцах.
+
+| Столбец | Смысл |
 |---|---|
-| participant_id | Выданный анонимный код или сгенерированный `P…` |
-| session_id | Случайный UUID сессии |
-| condition | `high_power` / `no_power` |
-| event_key | `role`, `check_pre`, `practice-1…4`, `main-1…48`, `check_post` |
-| phase, trial_number | `practice` / `main`, номер внутри фазы от 1 |
-| stimulus_id | Внутренний идентификатор стимула |
-| stimulus_filename | Оригинальное имя AVI, из реального манифеста |
-| stimulus_type | `genuine` / `posed`, метка из T5 |
-| emotion, subject, gender, source_row | Эмоция, код актёра, пол, строка T5 |
-| response, response_label | Выбранная категория и русская подпись |
-| correct | 1 — совпадение с меткой T5, 0 — несовпадение |
-| rt_ms | Миллисекунды от начала показа первого кадра до принятого ответа |
-| onset_source | `video_frame_callback` либо запасной `playing_event` |
-| onset_perf_ms, response_perf_ms, ended_perf_ms | Отметки performance.now на общей временной шкале загрузки страницы |
-| video_end_elapsed_ms | Конец видео минус начало первого кадра; включает остановки и буферизацию |
-| response_video_time_ms | Позиция в видеозаписи при ответе, currentTime × 1000 |
-| response_before_end | true — ответ принят до события ended |
-| response_phase | `during_video` / `after_video` |
-| response_after_end_ms | 0 при раннем ответе, иначе задержка после ended |
-| video_started_at, answered_at, video_ended_at, trial_ended_at | UTC ISO 8601 по часам устройства участника |
-| received_at | UTC ISO 8601 регистрации строки: часы сервера в локальном режиме, часы браузера в GitHub Pages; это не отметка доставки в Drive |
-| media_duration_ms | Продолжительность файла по браузеру |
-| watched_to_end | Проба фиксируется только после ended |
-| attempt, restarted_after_reload | Номер попытки этой пробы в этой вкладке, был ли перезапуск |
-| hidden_ms, playback_events | Скрытая вкладка, паузы, буферизация, потеря фокуса |
-| media_error_count, dropped_video_frames | Ошибки загрузки, пропущенные кадры при поддержке браузером |
-| screen_width, screen_height | Размер рабочей области в CSS-пикселях |
-| quality_flag | Требует проверки при скрытии вкладки, буферизации, потере фокуса или повторе |
-| source_sha256, web_sha256 | Контроль целостности исходного и преобразованного файла |
-| run_mode, media_mode | `test`/`production` для Pages; `pilot`/`demo`/`production` для локального сервера; `pedfe`/`demo` |
-| fixation_onset_perf_ms, fixation_offset_perf_ms, fixation_duration_ms | Фактическое начало, конец и длительность фиксации |
-| configured_fixation_ms | Настройка фиксации, по умолчанию 600 мс |
-| autoplay_blocked, fullscreen, browser_family, playback_rate | Ограничения автозапуска, режим экрана, семейство браузера и скорость воспроизведения |
-| study_version, manifest_version | Версии реализации и набора |
-| payload_hash | Технический контроль повторной отправки; не идентифицирует человека |
+| participant_id, session_id, condition | Код, UUID, high_power / no_power |
+| trial_number | Порядковый номер основной пробы 1–48 |
+| video_filename | Оригинальное имя AVI |
+| emotion | Эмоциональная категория PEDFE |
+| authenticity | genuine / posed из T5 |
+| response | genuine / posed, ответ участника |
+| correct | 0 или 1, совпадение response и authenticity |
+| video_duration_ms | Продолжительность видео по браузеру |
+| reaction_time_ms | От первого фактического кадра до первого принятого ответа |
+| response_during_video | true до ended, false после |
+| response_after_end_ms | 0 при раннем ответе; задержка после ended при позднем |
+| trial_completed_correctly | Досмотр подтверждён и технический quality_flag не установлен |
+| watched_to_end, quality_flag | Досмотр и отдельная отметка необходимости технической проверки |
+| onset_source | video_frame_callback, запасной playing_event |
+| onset_perf_ms, response_perf_ms, ended_perf_ms | Временная шкала браузера; RT = response_perf_ms − onset_perf_ms |
+| video_started_at, answered_at, video_ended_at, trial_ended_at | UTC по часам устройства |
+| fixation_duration_ms, configured_fixation_ms | Фактическая фиксация и настройка 600 мс |
+| next_clicked_at, next_elapsed_ms | Нажатие «Далее», отдельно от RT; присоединено из журнала |
+| playback_events | Массив технических событий в текстовой ячейке CSV |
+| hidden_ms, media_error_count, dropped_video_frames, attempt | Скрытие, ошибки, кадры, номер попытки |
+| screen_width, screen_height, browser_family, fullscreen, autoplay_blocked | Условия предъявления |
+| study_version, manifest_version, is_test, media_mode | Версии, TEST и тип материалов |
+| participant_filename | Имя второго файла пары |
 
-В роли сохраняются `allocation`, `action`, `decision_rt_ms`. Участник без власти не может отправить другое распределение через штатный интерфейс; сервер это также проверяет.
+Оригинальные технические поля 0.2, в том числе rt_ms, stimulus_filename, stimulus_type и response_before_end, также сохранены. Новые обязательные имена являются точными алиасами этих значений; расчёт RT и предъявление не менялись. Никакие флаги качества автоматически не удаляют строки.
 
-Для каждой проверки власти: `q1`, `q2`, `q3` — целые 1–7, `power_mean` — арифметическое среднее. Все вопросы прямые, обратного кодирования нет. Сравнивайте группы прежде всего по проверке манипуляции, не исключайте участников по её результату без заранее принятого правила.
+## participant_<participant_id>_<session_id>.csv
 
-Длительные RT, технические сбои и флаги качества автоматически не выкидываются. Критерии исключения и основной анализ нужно заранее зафиксировать. Для основного анализа используются только `phase=main`, `media_mode=pedfe`, согласованная версия набора, `run_mode=production`, статус complete и повторное согласие после дебрифинга. Данные технической заглушки не являются результатами распознавания эмоций.
+Одна строка:
 
-Программа не даёт гарантии физической точности до миллисекунды: есть задержки экрана, браузера и устройства ввода. Запасной метод `playing` менее точен относительно первого кадра, поэтому метод начала сохраняется отдельно. Переключение вкладки меняет условия предъявления; такие записи требуют отдельной проверки. Часы устройства не используются для расчёта RT.
+- participant_id, session_id, condition, study_version, procedure_version;
+- allocation: anna_A / anna_B; allocation_action: binding_decision / acknowledgement;
+- anna_set, anna_video_count, mikhail_set, mikhail_video_count, allocation_rt_ms;
+- perceived_social_power, emotion_recognition_ease, role_consideration — **три отдельные целые оценки 1–7**;
+- status=complete, is_test, consent, adult, allow_use_after_debrief, started_at, completed_at;
+- n_main=48, n_correct, accuracy_percent=n_correct/48*100;
+- trials_filename, participant_filename — два файла одной сессии;
+- practice_count=4, practice_trials — отдельный массив четырёх тренировок в текстовой ячейке;
+- technical_journal — первый ответ и нажатие «Далее» каждой пробы, включая тренировку;
+- main_order, practice_order, instruction_log — порядки и подтверждения отображённых инструкций;
+- streaming_enabled — удалось ли включить промежуточную запись DataPipe.
 
-## GitHub Pages / DataPipe 0.2
+Структурированные ячейки корректно экранируются по правилам CSV и при необходимости разбираются как JSON-значения внутри ячейки. Сам файл является CSV и открывается в Excel/R/Python/Jamovi. Все исследовательские показатели — отдельные простые столбцы. Среднего power_mean нет: вопросы измеряют разные аспекты. Основная зависимая переменная не включает ответы опроса.
 
-Один JSON содержит `session`, `main_trials` (48 строк), `practice_trials` (4), `manipulation`, `power_checks`, `summary`, `events`, `technical_journal`. Для основного анализа нужны `status=complete`, `is_test=false`, `session.allow_use_after_debrief=true`, `session.media_mode=pedfe`. Из анализа исключаются UUID с отдельной отметкой `withdrawal_<UUID>.json`, даже если есть промежуточный файл. Папка TEST отделена от основных данных.
+## Надёжность и анализ
 
-`summary.n_correct / 48 * 100` — основной процент правильных ответов. `technical_journal` сохраняет события `response` и `navigation`. В `navigation` находятся `next_clicked_at`, `next_elapsed_ms`; сопоставляйте по `phase` и `trial_number`. Поля перехода внутри неизменяемой основной строки пустые, поскольку проба сохраняется до нажатия «Далее». Метки разных загрузок страницы сопоставляйте по UTC, поскольку шкала `performance` начинается заново при перезагрузке.
+Первая отправка — trials; вторая — participant, после подтверждения первой. Для итогового анализа проверяйте наличие пары, совпадение session_id и наличие всех 48 проб. Подтверждения хранятся отдельно по каждому имени. При сетевой ошибке повторяется только неподтверждённый CSV с неизменным содержимым. 201 — сохранён сервисом, 202 — принят в очередь. Время фактического появления видно по времени создания в Drive; received_at в Pages относится к регистрации строки в браузере.
 
-`session.streaming_enabled=true` подтверждает включение промежуточной записи DataPipe. Успех окончательной отправки означает подтверждённый сервисом приём (201) либо принятие в очередь (202). Момент фактической доставки в Drive проверяется по времени создания файла в Drive. Итоговый файл формируется один раз и повторно отправляется без изменения содержимого при сетевой ошибке.
+TEST идёт в отдельную папку, оба имени имеют префикс TEST_. Тестовые файлы исключаются из выборки. Незавершённые восстановленные .partial.json не являются завершёнными участниками. Отдельный withdrawal_<UUID>.csv исключает этот UUID даже при наличии ранее принятой первой CSV или промежуточной копии. Старые JSON процедуры 0.2 остаются историческими данными и не смешиваются автоматически с 0.3.
+
+Для анализа: is_test=false, версия 0.3.0, status=complete, allow_use_after_debrief=true, media_mode=pedfe, оба файла пары, 48 основных строк, нет отметки отзыва. Ответы опроса не служат автоматическим основанием для исключения. Критерии качества и анализа задаются до проверки исследовательских результатов.
+
+Часы устройства не используются для расчёта RT. Точность ограничена экраном, браузером и устройством ввода; запасной playing менее точно соответствует первому кадру. При перезагрузке шкала performance начинается заново — между загрузками сопоставляйте UTC-метки.

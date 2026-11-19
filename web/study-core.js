@@ -1,6 +1,8 @@
-import {RU} from './content/ru.js';
-import {EXPERIMENT} from './config/experiment.js';
-export const VERSION='0.2.0';
+import {RU} from './content/ru.js?v=0.3.0';
+import {EXPERIMENT} from './config/experiment.js?v=0.3.0';
+import {csv,buildCSVExports,SURVEY_FIELDS} from './results.js?v=0.3.0';
+export {csv};
+export const VERSION='0.3.0';
 const encoder=new TextEncoder();
 export async function hash(value){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value)))].map(x=>x.toString(16).padStart(2,'0')).join('');}
 const iso=()=>new Date().toISOString();
@@ -15,16 +17,11 @@ export function demoManifest(){
 }
 function typeLabel(type){return RU.answers[type];}
 async function sessionKey(request){const token=(request.headers.get('cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('pe_session='))?.slice(11);return token&&/^[a-f0-9]{64}$/.test(token)?'sessions/'+await hash(token):null;}
-async function readSession(request,store){const key=await sessionKey(request);if(!key)return null;const session=await store.get(key+'/session.json');if(!session||Date.now()-Date.parse(session.started_at)>12*3600*1000)return null;return {key,session};}
+async function readSession(request,store){const key=await sessionKey(request);if(!key)return null;const session=await store.get(key+'/session.json');if(!session||session.procedure_version!==VERSION||Date.now()-Date.parse(session.started_at)>12*3600*1000)return null;return {key,session};}
 async function readEvents(store,key){const keys=await store.list(key+'/events/');const rows=await Promise.all(keys.map(k=>store.get(k)));return Object.fromEntries(rows.filter(Boolean).map(r=>[r.event_key,r]));}
 function publicSession(session,events){return {active:true,session_id:session.session_id,participant_id:session.participant_id,condition:session.condition,status:session.status,is_test:session.is_test===true,
   main:session.main.map(s=>({id:s.id,audio:s.audio===true,duration_ms:s.duration_ms})),practice:session.practice.map(s=>({id:s.id,type:s.type,audio:s.audio===true,duration_ms:s.duration_ms})),events};}
 function safeJSON(value,status=200,headers={}){return new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json; charset=utf-8',...headers}});}
-export function csv(rows){
-  const keys=[...new Set(rows.flatMap(Object.keys))];
-  const cell=x=>{let v=x==null?'':typeof x==='object'?JSON.stringify(x):String(x);if(/^[=+@\-\t\r]/.test(v))v="'"+v;return '"'+v.replaceAll('"','""')+'"';};
-  return '\uFEFF'+[keys.map(cell).join(','),...rows.map(row=>keys.map(k=>cell(row[k])).join(','))].join('\r\n');
-}
 export async function purgeExpired(store,now=Date.now(),fallbackUntil=null){
   let deleted=0;const keys=await store.list('sessions/');
   for(const key of keys.filter(k=>k.endsWith('/session.json'))){
@@ -36,21 +33,25 @@ export async function purgeExpired(store,now=Date.now(),fallbackUntil=null){
 export function validateEvent(key,data,s,events){
   if(!data||typeof data!=='object'||Array.isArray(data))fail(RU.server.message_03);
   const base={event_key:key,participant_id:s.participant_id,session_id:s.session_id,condition:s.condition,study_version:VERSION,manifest_version:s.manifest_version,media_mode:s.media_mode,run_mode:s.run_mode,is_test:s.is_test===true,received_at:iso()};
+  if(key==='common_instruction'||key==='role_instruction'){
+    if(data.acknowledged!==true||(key==='role_instruction'&&!events.common_instruction))fail(RU.errors.instructionsRequired);
+    return {...base,acknowledged:true,instruction_version:VERSION};
+  }
   if(key==='role'){
+    if(!events.common_instruction||!events.role_instruction)fail(RU.errors.instructionsRequired);
     if(!['anna_A','anna_B'].includes(data.allocation)||!number(data.decision_rt_ms))fail(RU.server.message_04);
     if(s.condition==='no_power'&&(data.allocation!=='anna_A'||data.action!=='acknowledgement'))fail(RU.server.message_05);
     if(s.condition==='high_power'&&data.action!=='binding_decision')fail(RU.server.message_06);
     return {...base,allocation:data.allocation,action:data.action,decision_rt_ms:data.decision_rt_ms};
   }
   if(!events.role)fail(RU.server.message_07);
-  if(key==='check_pre'||key==='check_post'){
-    if(key==='check_post'&&s.main.some((_,i)=>!events['main-'+(i+1)]))fail(RU.server.message_08);
-    if(![data.q1,data.q2,data.q3].every(n=>Number.isInteger(n)&&n>=1&&n<=7))fail(RU.server.message_09);
-    return {...base,q1:data.q1,q2:data.q2,q3:data.q3,power_mean:(data.q1+data.q2+data.q3)/3};
+  if(key==='final_survey'){
+    if(s.main.some((_,i)=>!events['main-'+(i+1)]))fail(RU.server.message_08);
+    if(Object.keys(data).length!==3||!SURVEY_FIELDS.every(key=>Number.isInteger(data[key])&&data[key]>=1&&data[key]<=7))fail(RU.server.message_09);
+    return {...base,...Object.fromEntries(SURVEY_FIELDS.map(key=>[key,data[key]]))};
   }
   const match=/^(practice|main)-(\d{1,2})$/.exec(key);if(!match)fail(RU.server.message_10);
   const phase=match[1],index=Number(match[2])-1,stim=s[phase][index];
-  if(s.check_pre_required!==false&&!events.check_pre)fail(RU.server.message_11);
   if(!stim||data.stimulus_id!==stim.id||data.phase!==phase||data.trial_number!==index+1)fail(RU.server.message_12);
   if(index>0&&!events[phase+'-'+index])fail(RU.server.message_13);
   if(phase==='main'&&s.practice.some((_,i)=>!events['practice-'+(i+1)]))fail(RU.server.message_14);
@@ -101,7 +102,7 @@ export async function handle(request,env){
       const key='sessions/'+await hash(token), manifest=env.manifest;
       const is_test=data.is_test===true;const forced=is_test&&env.config.mode!=='production'&&['high_power','no_power'].includes(data.test_condition)?data.test_condition:null;
       const session={session_id:crypto.randomUUID(),participant_id,is_test,condition:forced||(randomInt(2)?'high_power':'no_power'),assignment_method:forced?'test_only_forced':'crypto_bernoulli_p_0.5',started_at:iso(),status:'active',
-        consent_version:'2026-11-19-v2',consent:true,adult:true,check_pre_required:EXPERIMENT.manipulation_check_before,check_post_required:EXPERIMENT.manipulation_check_after,purpose:env.config.purpose??null,retention_until:env.config.retention_until??null,manifest_version:manifest.version,main:shuffle(manifest.main),practice:shuffle(manifest.practice),media_mode:env.config.media_mode,run_mode:env.config.mode};
+        consent_version:VERSION,procedure_version:VERSION,study_version:VERSION,consent:true,adult:true,purpose:env.config.purpose??null,retention_until:env.config.retention_until??null,manifest_version:manifest.version,main:shuffle(manifest.main),practice:shuffle(manifest.practice),media_mode:env.config.media_mode,run_mode:env.config.mode};
       if(!await env.store.create(idKey,{session_id:session.session_id}))fail(RU.server.message_33,409);
       if(env.config.mode==='production'){
         const inviteKey='invites/'+await hash(data.invite);
@@ -132,7 +133,7 @@ export async function handle(request,env){
         await env.store.put(key+'/journal/'+crypto.randomUUID()+'.json',row);response=safeJSON({saved:true},201);
       }else if(path==='/api/event'&&request.method==='POST'){
         if(s.status!=='active')fail(RU.server.message_38,409);
-        const data=await body();if(typeof data.key!=='string'||!/^(role|check_pre|check_post|practice-[1-4]|main-([1-9]|[1-3][0-9]|4[0-8]))$/.test(data.key))fail(RU.server.message_39);
+        const data=await body();if(typeof data.key!=='string'||!/^(common_instruction|role_instruction|role|final_survey|practice-[1-4]|main-([1-9]|[1-3][0-9]|4[0-8]))$/.test(data.key))fail(RU.server.message_39);
         const eventPath=key+'/events/'+data.key+'.json';const existing=await env.store.get(eventPath);
         if(existing){if(existing.payload_hash!==await hash(JSON.stringify(data.data)))fail(RU.server.message_40,409);response=safeJSON({saved:true,row:existing});}
         else{const events=await readEvents(env.store,key);const row=validateEvent(data.key,data.data,s,events);row.payload_hash=await hash(JSON.stringify(data.data));
@@ -140,7 +141,7 @@ export async function handle(request,env){
           else response=safeJSON({saved:true,row},201);}
       }else if(path==='/api/complete'&&request.method==='POST'){
         const data=await body();const events=await readEvents(env.store,key);
-        if(data.allow_use!==true||!events.role||(s.check_pre_required!==false&&!events.check_pre)||(s.check_post_required!==false&&!events.check_post)||s.main.some((_,i)=>!events['main-'+(i+1)])||s.practice.some((_,i)=>!events['practice-'+(i+1)]))fail(RU.server.message_41);
+        if(data.allow_use!==true||!events.role||!events.final_survey||s.main.some((_,i)=>!events['main-'+(i+1)])||s.practice.some((_,i)=>!events['practice-'+(i+1)]))fail(RU.server.message_41);
         if(s.status!=='complete'){const main=Object.values(events).filter(row=>row.phase==='main');const correct=main.reduce((sum,row)=>sum+row.correct,0);s.summary={n_main:main.length,n_correct:correct,accuracy_percent:correct/48*100};s.status='complete';s.completed_at=iso();s.allow_use_after_debrief=true;await env.store.put(key+'/session.json',s);}
         response=safeJSON({saved:true,receipt:RU.complete.receipt,summary:s.summary});
       }else if(path==='/api/withdraw'&&request.method==='POST'){
@@ -148,7 +149,9 @@ export async function handle(request,env){
         response=safeJSON({deleted:true},200,{'Set-Cookie':'pe_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});
       }else if(path==='/api/export'&&request.method==='GET'){
         const events=await readEvents(env.store,key);const rows=Object.values(events).filter(row=>!url.searchParams.has('phase')||row.phase===url.searchParams.get('phase')).sort((a,b)=>a.received_at.localeCompare(b.received_at));
-        const asCSV=url.searchParams.get('format')==='csv';response=new Response(asCSV?csv(rows):JSON.stringify({session:s,events:rows},null,2),{headers:{'Content-Type':asCSV?'text/csv; charset=utf-8':'application/json; charset=utf-8','Content-Disposition':`attachment; filename="${s.participant_id}.${asCSV?'csv':'json'}"`}});
+        const asCSV=url.searchParams.get('format')==='csv';let exported=null;
+        if(asCSV){const journal=await Promise.all((await env.store.list(key+'/journal/')).map(k=>env.store.get(k)));exported=buildCSVExports(s,events,journal).find(file=>file.kind===(url.searchParams.get('kind')==='participant'?'participant':'trials'));}
+        response=new Response(asCSV?exported.data:JSON.stringify({session:s,events:rows},null,2),{headers:{'Content-Type':asCSV?'text/csv; charset=utf-8':'application/json; charset=utf-8','Content-Disposition':`attachment; filename="${asCSV?exported.filename:s.participant_id+'.json'}"`}});
       }else fail(RU.server.message_43,404);
     }
     else if(request.method==='GET')response=await env.asset(path,request);

@@ -9,7 +9,8 @@ function fixture(){const data=new Map();return {data,config:{mode:'demo',media_m
 async function request(env,path,body,cookie,customHeaders={}){return handle(new Request(origin+path,{method:body===undefined?'GET':'POST',headers:{...(body===undefined?{}:{Origin:origin,'Content-Type':'application/json'}),...(cookie?{Cookie:cookie}:{}),...customHeaders},body:body===undefined?undefined:JSON.stringify(body)}),env);}
 async function start(env,condition){const r=await request(env,'/api/session',{consent:true,adult:true});assert.equal(r.status,201);const cookie=r.headers.get('set-cookie').split(';')[0];const s=await r.json();if(condition){const p=[...env.data.keys()].find(k=>k.endsWith('/session.json'));env.data.get(p).condition=condition;s.condition=condition;}return {s,cookie};}
 async function event(env,cookie,key,data){const r=await request(env,'/api/event',{key,data},cookie);assert.ok(r.ok,await r.clone().text());return r.json();}
-const scale={q1:1,q2:4,q3:7};
+const scale={perceived_social_power:1,emotion_recognition_ease:4,role_consideration:7};
+async function instructions(env,cookie){await event(env,cookie,'common_instruction',{acknowledged:true});await event(env,cookie,'role_instruction',{acknowledged:true});}
 function trial(s,phase,index,early=true){return {phase,trial_number:index+1,stimulus_id:s[phase][index].id,response:'genuine',rt_ms:early?200:1500,onset_perf_ms:100,ended_perf_ms:1300,response_perf_ms:early?300:1600,
   video_end_elapsed_ms:1200,response_video_time_ms:early?200:1200,response_before_end:early,response_phase:early?'during_video':'after_video',watched_to_end:true,onset_source:'video_frame_callback',attempt:1,hidden_ms:0,media_duration_ms:1200,
   video_started_at:new Date().toISOString(),video_ended_at:new Date().toISOString(),answered_at:new Date().toISOString(),trial_ended_at:new Date().toISOString()};}
@@ -18,15 +19,15 @@ test('video clock: response after end is measured from onset',()=>{const c=new V
 test('manifest has identical balanced 48-stimulus set and disjoint practice',()=>{const m=demoManifest();assert.equal(m.main.length,48);assert.equal(m.practice.length,4);assert.equal(new Set(m.main.map(s=>s.id)).size,48);const cells={};m.main.forEach(s=>cells[s.emotion+'/'+s.type]=(cells[s.emotion+'/'+s.type]||0)+1);assert.equal(Object.keys(cells).length,12);assert.ok(Object.values(cells).every(n=>n===4));});
 for(const condition of ['high_power','no_power'])test(`complete ${condition} session: 4 practice + 48 trials, checks, export and idempotency`,async()=>{
   const env=fixture(),{s,cookie}=await start(env,condition);
+  await instructions(env,cookie);
   await event(env,cookie,'role',{allocation:'anna_A',action:condition==='high_power'?'binding_decision':'acknowledgement',decision_rt_ms:1000});
-  await event(env,cookie,'check_pre',scale);
   let first;
   for(const phase of ['practice','main'])for(let i=0;i<s[phase].length;i++){const payload=trial(s,phase,i,i%2===0);if(phase==='main'&&i===0)first=payload;await event(env,cookie,phase+'-'+(i+1),payload);}
   const repeat=await event(env,cookie,'main-1',first);assert.equal(repeat.row.correct,Number(repeat.row.stimulus_type==='genuine'));
-  await event(env,cookie,'check_post',scale);
+  await event(env,cookie,'final_survey',scale);
   const completed=await request(env,'/api/complete',{allow_use:true},cookie);assert.equal(completed.status,200);
   const exported=await (await request(env,'/api/export',undefined,cookie)).json();assert.equal(exported.events.filter(r=>r.phase==='main').length,48);assert.equal(exported.session.condition,condition);assert.ok(exported.session.allow_use_after_debrief);
-  const resume=await (await request(env,'/api/session',undefined,cookie)).json();assert.equal(resume.status,'complete');assert.equal(Object.keys(resume.events).length,55);
+  const resume=await (await request(env,'/api/session',undefined,cookie)).json();assert.equal(resume.status,'complete');assert.equal(Object.keys(resume.events).length,56);
 });
 test('consent, CSRF, media authorization, sequence, input checks and withdrawal',async()=>{
   const env=fixture();assert.equal((await request(env,'/media/demo.mp4')).status,401);
@@ -37,9 +38,9 @@ test('consent, CSRF, media authorization, sequence, input checks and withdrawal'
   assert.equal((await request(env,'/api/complete',{allow_use:true},cookie)).status,400);
   assert.equal((await request(env,'/media/no-such-id.mp4',undefined,cookie)).status,403);
   assert.equal((await request(env,'/media/'+s.main[0].id+'.mp4',undefined,cookie)).status,200);
+  await instructions(env,cookie);
   await event(env,cookie,'role',{allocation:'anna_A',action:'acknowledgement',decision_rt_ms:1});
   assert.equal((await request(env,'/api/event',{key:'main-1',data:trial(s,'main',0)},cookie)).status,400);
-  await event(env,cookie,'check_pre',scale);
   const bad=trial(s,'practice',0);bad.rt_ms=-1;assert.equal((await request(env,'/api/event',{key:'practice-1',data:bad},cookie)).status,400);
   assert.equal((await request(env,'/api/withdraw',{},cookie)).status,200);assert.equal(env.data.size,0);assert.equal((await request(env,'/api/export',undefined,cookie)).status,401);
 });

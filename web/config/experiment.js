@@ -1,10 +1,9 @@
 // Настройки процедуры. Тексты находятся в ../content/ru.js.
 export const EXPERIMENT = {
-  version: '0.2.0',
+  version: '0.3.0',
   fixation_ms: 600,
   offer_fullscreen: true,
-  manipulation_check_before: true,
-  manipulation_check_after: true,
+  final_survey_required: true,
   breaks_after: [16, 32],
   main_trials: 48,
   practice_trials: 4,

@@ -1,6 +1,6 @@
-import {RU,text} from './content/ru.js';
-import {EXPERIMENT} from './config/experiment.js';
-import {createStore} from './storage/index.js?v=0.2.2';
+import {RU,text} from './content/ru.js?v=0.3.0';
+import {EXPERIMENT} from './config/experiment.js?v=0.3.0';
+import {createStore} from './storage/index.js?v=0.3.0';
 import {runVideoTrial} from './video-trial.js';
 import {$,root,show,button,screen,escapeHTML as h} from './ui.js';
 let store,config,session,jsPsych,stopped=false;
@@ -23,19 +23,29 @@ async function fullscreenOffer(){
   if(!EXPERIMENT.offer_fullscreen||document.fullscreenElement)return {};
   return new Promise(resolve=>{show(`<h1>${h(RU.instructions.fullscreenTitle)}</h1><p>${h(RU.instructions.fullscreenBody)}</p><div class="actions">${button(RU.buttons.fullscreen,'id="fullscreen-yes"')}${button(RU.buttons.windowed,'id="fullscreen-no" class="secondary"')}</div>`);$('#fullscreen-no').onclick=()=>resolve({fullscreen_requested:false});$('#fullscreen-yes').onclick=async()=>{try{await document.documentElement.requestFullscreen();resolve({fullscreen_requested:true});}catch{resolve({fullscreen_requested:true,fullscreen_granted:false});}};});
 }
+const paragraphs=items=>items.map(item=>`<p>${h(item)}</p>`).join('');
+async function commonInstruction(){
+  await screen(RU.role.commonTitle,paragraphs(RU.role.commonInstruction));
+  return saveEvent('common_instruction',{acknowledged:true});
+}
+async function roleInstruction(){
+  const high=session.condition==='high_power',items=high?RU.role.highInstruction:RU.role.lowInstruction;
+  await screen(high?RU.role.highTitle:RU.role.lowTitle,`<div class="notice">${paragraphs(items.slice(0,3))}</div>${paragraphs(items.slice(3))}`);
+  return saveEvent('role_instruction',{acknowledged:true});
+}
 async function roleTask(){
   const high=session.condition==='high_power';
-  show(`<div class="eyebrow">${h(RU.role.eyebrow)}</div><h1>${h(high?RU.role.highTitle:RU.role.lowTitle)}</h1><p>${h(RU.role.context)}</p><p>${h(high?RU.role.highInstruction:RU.role.lowInstruction)}</p>${high?`<form id="role-form"><fieldset class="allocations"><legend>${h(RU.role.allocationLegend)}</legend><label><input name="allocation" type="radio" value="anna_A" required>${h(RU.role.allocationA)}</label><label><input name="allocation" type="radio" value="anna_B" required>${h(RU.role.allocationB)}</label></fieldset><button type="submit">${h(RU.role.highButton)}</button></form>`:`<div class="notice">${h(RU.role.lowDecision)}</div><div class="actions">${button(RU.role.lowButton,'id="acknowledge"')}</div>`}`);
+  show(`<div class="eyebrow">${h(RU.role.eyebrow)}</div><h1>${h(RU.role.allocationTitle)}</h1>${paragraphs(RU.role.context)}<p>${h(RU.role.simulationNote)}</p>${high?`${paragraphs(RU.role.allocationHighInstruction)}<form id="role-form"><fieldset class="allocations"><legend>${h(RU.role.allocationLegend)}</legend><label><input name="allocation" type="radio" value="anna_A" required>${h(RU.role.allocationA)}</label><label><input name="allocation" type="radio" value="anna_B" required>${h(RU.role.allocationB)}</label></fieldset><button type="submit">${h(RU.role.highButton)}</button></form>`:`<div class="notice"><p>${h(RU.role.lowDecision)}</p><p>${h(RU.role.resultA)}</p><p>${h(RU.role.lowFinal)}</p></div><div class="actions">${button(RU.role.lowButton,'id="acknowledge"')}</div>`}`);
   const start=performance.now();const allocation=await new Promise(resolve=>{if(high)$('#role-form').onsubmit=e=>{e.preventDefault();resolve(new FormData(e.target).get('allocation'));};else $('#acknowledge').onclick=()=>resolve('anna_A');});
   const row=await saveEvent('role',{allocation,action:high?'binding_decision':'acknowledgement',decision_rt_ms:performance.now()-start});await screen(high?RU.role.highConfirmed:RU.role.lowConfirmed,`<div class="notice">${h(allocation==='anna_A'?RU.role.resultA:RU.role.resultB)}</div><p>${h(high?RU.role.highConsequence:RU.role.lowConsequence)}</p>`);return row;
 }
-async function manipulationCheck(key){
-  const answers=await new Promise(resolve=>{show(`<div class="eyebrow">${h(RU.scale.eyebrow)}</div><h1>${h(RU.scale.title)}</h1><form id="scale-form">${RU.scale.questions.map((question,i)=>`<fieldset><legend>${h(question)}</legend><div class="scale">${[1,2,3,4,5,6,7].map(value=>`<label><input type="radio" required name="q${i+1}" value="${value}">${value}</label>`).join('')}</div><div class="ends"><span>${h(RU.scale.left)}</span><span>${h(RU.scale.right)}</span></div></fieldset>`).join('')}<button type="submit">${h(RU.buttons.continue)}</button></form>`);$('#scale-form').onsubmit=e=>{e.preventDefault();resolve(Object.fromEntries([...new FormData(e.target)].map(([k,v])=>[k,Number(v)])));};});return saveEvent(key,answers);
+async function finalSurvey(){
+  const answers=await new Promise(resolve=>{show(`<div class="eyebrow">${h(RU.finalSurvey.eyebrow)}</div><h1>${h(RU.finalSurvey.title)}</h1><form id="scale-form">${RU.finalSurvey.questions.map(question=>`<fieldset><legend>${h(question.text)}</legend><div class="scale">${[1,2,3,4,5,6,7].map(value=>`<label><input type="radio" required name="${h(question.key)}" value="${value}">${value}</label>`).join('')}</div><div class="ends"><span>${h(question.left)}</span><span>${h(question.right)}</span></div></fieldset>`).join('')}<button type="submit">${h(RU.buttons.continue)}</button></form>`);$('#scale-form').onsubmit=e=>{e.preventDefault();resolve(Object.fromEntries([...new FormData(e.target)].map(([k,v])=>[k,Number(v)])));};});return saveEvent('final_survey',answers);
 }
 async function withdraw(){
   if($('#withdraw-dialog'))return;const d=document.createElement('dialog');d.id='withdraw-dialog';d.innerHTML=`<h2>${h(RU.withdraw.title)}</h2><p>${h(RU.withdraw.body)}</p><p>${h(store.provider==='datapipe'?RU.withdraw.driveNote:RU.withdraw.localNote)}</p><p>${h(text(RU.complete.code,{id:session.participant_id}))}</p><div class="actions">${button(RU.withdraw.confirm,'id="withdraw-confirm"')}${button(RU.buttons.return,'id="withdraw-cancel" class="secondary"')}</div><p id="withdraw-error" class="error" role="alert"></p>`;document.body.append(d);d.showModal();$('#withdraw-cancel').onclick=()=>d.remove();$('#withdraw-confirm').onclick=async()=>{const b=$('#withdraw-confirm');b.disabled=true;try{await store.call('withdraw',{});stopped=true;document.querySelector('video')?.pause();window.dispatchEvent(new Event('study:stop'));try{localStorage.removeItem('pedfe-outbox-'+session.session_id);}catch{};d.remove();$('#withdraw').hidden=true;show(`<h1>${h(RU.withdraw.doneTitle)}</h1><p>${h(store.provider==='datapipe'?RU.withdraw.doneDrive:RU.withdraw.doneLocal)}</p>`);}catch{$('#withdraw-error').textContent=RU.withdraw.error;b.disabled=false;}};
 }
-function downloads(){return `<div class="actions"><a class="button secondary" href="${store.exportURL('csv')}" download="${session.participant_id}.csv">${h(RU.buttons.downloadCSV)}</a><a class="button secondary" href="${store.exportURL('json')}" download="${session.participant_id}.json">${h(RU.buttons.downloadJSON)}</a></div>`;}
+function downloads(){return `<div class="actions"><a class="button secondary" href="${store.exportURL('trials')}" download="trials_${session.participant_id}_${session.session_id}.csv">${h(RU.buttons.downloadCSV)}</a><a class="button secondary" href="${store.exportURL('participant')}" download="participant_${session.participant_id}_${session.session_id}.csv">${h(RU.buttons.downloadParticipantCSV)}</a></div>`;}
 function newTestButton(){if(!(isTest||config.mode!=='production'||session.is_test))return;const b=document.createElement('button');b.className='secondary';b.textContent=RU.buttons.newTest;b.onclick=async()=>{await store.call('new-test',{});location.reload();};root().append(b);}
 function completed(receipt){$('#withdraw').hidden=true;show(`<h1>${h(RU.complete.title)}</h1><p>${h(text(RU.complete.code,{id:session.participant_id}))}</p><p>${h(session.is_test||isTest?RU.complete.testBody:RU.complete.body)}</p><p>${h(receipt||RU.complete.receipt)}</p>${downloads()}`);newTestButton();}
 async function finalPage(){
@@ -45,10 +55,10 @@ async function finalPage(){
 function timeline(){
   const P=jsPsychModule.ParameterType;
   class StudyScreen{static info={name:'study-screen',version:EXPERIMENT.version,parameters:{run:{type:P.FUNCTION,default:undefined}},data:{}};constructor(j){this.jsPsych=j;}async trial(element,trial){const row=await trial.run();if(!stopped)this.jsPsych.finishTrial(row||{});}}
-  const trials=[];const add=run=>trials.push({type:StudyScreen,run});add(fullscreenOffer);if(!session.events.role)add(roleTask);if(EXPERIMENT.manipulation_check_before&&!session.events.check_pre)add(()=>manipulationCheck('check_pre'));
+  const trials=[];const add=run=>trials.push({type:StudyScreen,run});add(fullscreenOffer);if(!session.events.common_instruction)add(commonInstruction);if(!session.events.role_instruction)add(roleInstruction);if(!session.events.role)add(roleTask);
   if(session.practice.some((_,i)=>!session.events[`practice-${i+1}`]))add(()=>screen(RU.instructions.title,RU.instructions.body,RU.instructions.beginPractice));for(const [i,stim] of session.practice.entries())if(!session.events[`practice-${i+1}`])add(()=>runVideoTrial({stim,index:i,phase:'practice',session,store,saveEvent,isStopped:()=>stopped}));
   if(session.main.some((_,i)=>!session.events[`main-${i+1}`]))add(()=>screen(RU.instructions.mainTitle,RU.instructions.mainBody,RU.instructions.beginMain));for(const [i,stim] of session.main.entries()){if(session.events[`main-${i+1}`])continue;add(()=>runVideoTrial({stim,index:i,phase:'main',session,store,saveEvent,isStopped:()=>stopped}));if(EXPERIMENT.breaks_after.includes(i+1))add(()=>screen(RU.instructions.breakTitle,`<p>${h(RU.instructions.breakBody)}</p>`));}
-  if(EXPERIMENT.manipulation_check_after&&!session.events.check_post)add(()=>manipulationCheck('check_post'));add(finalPage);return trials;
+  if(!session.events.final_survey)add(finalSurvey);add(finalPage);return trials;
 }
 async function boot(){initText();try{store=await createStore();config=await store.call('config');session=await store.call('session');if(!session.active)await consent();if(session.status==='complete'){completed(session.delivery?.queued?RU.saving.queued:RU.complete.receipt);return;}$('#withdraw').hidden=false;$('#withdraw').onclick=withdraw;const pending=JSON.parse(localStorage.getItem('pedfe-outbox-'+session.session_id)||'null');if(pending)await saveEvent(pending.key,pending.data);jsPsych=initJsPsych({display_element:'experiment'});await jsPsych.run(timeline());}catch(error){if(!stopped)show(`<h1>${h(RU.errors.unavailableTitle)}</h1><p class="error">${h(error.message)}</p><p>${h(RU.errors.unavailableBody)}</p>`);}}
 boot();
