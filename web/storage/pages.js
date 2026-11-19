@@ -5,7 +5,7 @@ const KEY='pedfe-session-v2';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 export class BrowserStore {
   constructor({storage=globalThis.localStorage,pipe=globalThis.DataPipe,fetcher=globalThis.fetch}={}){
-    this.provider='datapipe';this.storage=storage;this.pipe=pipe;this.fetcher=fetcher;this.stream=null;
+    this.provider='datapipe';this.storage=storage;this.pipe=pipe;this.fetcher=fetcher.bind(globalThis);this.stream=null;
     try{this.session=JSON.parse(storage.getItem(KEY)||'null');}catch{throw Error(RU.errors.storage);}
     this.test=new URL(globalThis.location?.href||'http://localhost').searchParams.get('test')==='1';
   }

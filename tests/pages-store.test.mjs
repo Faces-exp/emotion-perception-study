@@ -23,6 +23,11 @@ async function completeTrials(store){
   }
   await store.call('event',{key:'check_post',data:answers});return s;
 }
+test('Pages binds browser fetch to its window context',async()=>{
+  const {storage}=fixture();
+  const store=new BrowserStore({storage,pipe:{},fetcher:async function(){assert.equal(this,globalThis);return new Response(JSON.stringify(manifest));}});
+  assert.equal((await store.manifest()).main.length,48);
+});
 test('Pages persists one randomized test session and final JSON with all 48 trial rows and score',async()=>{
   const f=fixture(),s=await completeTrials(f.store);assert.equal(s.condition,'no_power');assert.equal(s.is_test,true);
   const result=await f.store.call('complete',{allow_use:true});assert.equal(result.saved,true);assert.equal(f.writes.length,1);
