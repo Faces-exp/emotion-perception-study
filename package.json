@@ -1,0 +1,5 @@
+{
+  "name": "power-emotion-study", "version": "0.2.0", "private": true,
+  "type": "module", "engines": {"node": ">=24"},
+  "scripts": {"start": "node server/local.mjs", "test": "node --test tests/*.test.mjs", "build": "node scripts/build-site.mjs", "prepare:pages": "node scripts/prepare-pages.mjs"}
+}

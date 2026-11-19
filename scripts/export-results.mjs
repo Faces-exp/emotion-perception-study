@@ -1,0 +1,14 @@
+import {DatabaseSync} from 'node:sqlite';
+import fs from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import {csv} from '../server/core.mjs';
+const db=new DatabaseSync(fileURLToPath(new URL('../results/study.sqlite',import.meta.url)),{readOnly:true});
+const records=db.prepare("SELECT value FROM records WHERE key LIKE 'sessions/%'").all().map(r=>JSON.parse(r.value));
+const sessions=records.filter(r=>r.consent===true);
+const completeIDs=new Set(sessions.filter(s=>s.status==='complete'&&s.allow_use_after_debrief).map(s=>s.session_id));
+const trials=records.filter(r=>r.phase==='main'&&completeIDs.has(r.session_id));
+const output=new URL('../results/export/',import.meta.url);await fs.mkdir(output,{recursive:true});
+await fs.writeFile(new URL('trials.csv',output),csv(trials));
+await fs.writeFile(new URL('sessions.json',output),JSON.stringify(sessions,null,2));
+await fs.writeFile(new URL('all-events.json',output),JSON.stringify(records.filter(r=>r.event_key),null,2));
+console.log(`Exported ${completeIDs.size} completed sessions; ${trials.length} main trials. Incomplete sessions remain separately in all-events.json.`);db.close();

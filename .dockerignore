@@ -1,0 +1,5 @@
+private/
+results/
+.git/
+dist/
+*.zip

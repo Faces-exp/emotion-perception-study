@@ -1,0 +1,5 @@
+# Replace the hostname. Run the application on a private interface/network.
+study.example.org {
+    reverse_proxy 127.0.0.1:8787
+    header X-Robots-Tag "noindex, nofollow, noarchive"
+}

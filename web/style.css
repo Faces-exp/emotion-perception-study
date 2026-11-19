@@ -1,0 +1,40 @@
+:root{font-family:Arial,Helvetica,sans-serif;color:#1e2932;background:#eef1f4;font-size:17px;line-height:1.55;color-scheme:light}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}button,input{font:inherit}
+header,footer{max-width:1080px;margin:auto;padding:20px 28px;display:flex;gap:20px;justify-content:space-between;align-items:center}
+#header-title{font-weight:600}#mode{font-size:.84rem;color:#53636e;max-width:430px}
+#experiment{max-width:880px;margin:10px auto 30px;background:#fff;border:1px solid #d7dfe5;border-radius:12px;padding:36px 44px;min-height:420px}
+h1{font-size:1.85rem;line-height:1.25;letter-spacing:-.02em;margin:5px 0 24px}h2{font-size:1.2rem;line-height:1.35;margin-top:28px}p{margin:14px 0}
+button,.button{display:inline-block;border:1px solid #274f66;border-radius:7px;background:#274f66;color:#fff;font-weight:600;padding:12px 22px;cursor:pointer;text-decoration:none}
+button:hover,.button:hover{background:#1d3f53}button:disabled{opacity:.45;cursor:default}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #277dbc;outline-offset:3px}
+.secondary,.button.secondary{background:#fff;color:#274f66;border-color:#9aadb9}.text-button{background:none!important;color:#526671;border:0;padding:0;font-weight:400;text-decoration:underline}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.eyebrow{font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#586f7d}
+.notice{padding:14px 18px;border-left:3px solid #5b7e91;background:#eef4f7}.muted{font-size:.88rem;color:#546a77}.error{color:#a32e2e}
+label{display:block;margin:15px 0}label.check{display:flex;gap:12px;align-items:flex-start}input[type=checkbox]{width:20px;height:20px;flex:0 0 auto;margin-top:4px}
+input[type=text],input[type=password]{display:block;width:min(100%,400px);border:1px solid #a8b9c4;border-radius:6px;padding:11px 12px;margin:7px 0}
+input[type=radio]{width:18px;height:18px;accent-color:#274f66}fieldset{border:0;margin:26px 0;padding:0}legend{font-weight:600;margin-bottom:12px}
+.scale{display:flex;gap:9px}.scale label{flex:1;text-align:center;padding:10px 4px;border:1px solid #b8c7d0;border-radius:6px;cursor:pointer;margin:0}.scale input{display:block;margin:0 auto 6px}
+.ends{display:flex;justify-content:space-between;gap:35px;font-size:.84rem;color:#526a78;margin-top:7px}.allocations{display:grid;gap:12px}.allocations label{border:1px solid #b9c8d1;padding:15px;border-radius:6px}.allocations input{margin-right:12px}
+footer{font-size:.8rem;color:#526a78}dialog{width:min(92vw,570px);padding:30px;border:1px solid #adbec9;border-radius:10px}dialog::backdrop{background:#18232e99}
+.save-error{border:1px solid #b95050;background:#fff5f5;padding:16px;margin-top:18px}.save-error p{margin:5px 0 12px}
+body[data-screen=trial],body[data-screen=fixation],body[data-screen=loading]{background:#a0a0a0;overflow:hidden}
+body[data-screen=trial] header,body[data-screen=trial] footer,body[data-screen=fixation] header,body[data-screen=fixation] footer,body[data-screen=loading] header,body[data-screen=loading] footer{display:none}
+body[data-screen=trial] #experiment,body[data-screen=fixation] #experiment,body[data-screen=loading] #experiment{width:100vw;height:100dvh;max-width:none;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:transparent}
+.fixation{height:100dvh;width:100vw;display:flex;align-items:center;justify-content:center;color:#171717;font-family:Arial,sans-serif;font-size:32px;font-weight:400;line-height:1;user-select:none}
+.loading{height:100dvh;margin:0;display:flex;justify-content:center;align-items:center;color:#252525}
+.trial{height:100dvh;display:grid;grid-template-rows:minmax(0,1fr) auto auto auto auto;gap:10px;padding:18px clamp(18px,3vw,50px) 16px;position:relative}
+.video-stage{min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.video-stage video{display:block;width:100%;height:100%;max-height:none;object-fit:contain;background:transparent;pointer-events:none}
+.video-stage video::-webkit-media-controls{display:none!important}
+.trial-question{margin:0;text-align:center;color:#151515;font-size:clamp(17px,1.7vw,22px);line-height:1.3;font-weight:500}
+.responses{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:min(100%,1000px);margin:0 auto}
+.responses button{min-height:58px;padding:10px 18px;font-size:clamp(17px,1.7vw,22px);background:#f2f2f2;color:#171717;border:1px solid #626262;border-radius:5px;font-weight:500}
+.responses button.selected{background:#243e50;color:#fff;border-color:#243e50;opacity:1}
+.responses button:disabled:not(.selected){opacity:1;color:#555;background:#dadada}
+.trial-bottom{width:min(100%,1000px);margin:auto;display:flex;gap:15px;align-items:center;justify-content:space-between;min-height:45px}
+.trial-status{font-size:14px;line-height:1.35;color:#252525;margin:0}.trial-bottom button{min-width:145px;padding:10px 24px}
+.practice-feedback{font-size:15px;line-height:1.3;color:#202020;margin:0;text-align:center}
+.trial-exit{position:absolute;top:7px;right:10px;width:30px;height:30px;padding:0;border:0;border-radius:50%;background:#a0a0a0aa;color:#333;font-size:25px;font-weight:400;line-height:1}
+#video-recovery{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);box-shadow:0 3px 15px #0004}
+body[data-screen=trial] .save-error{position:absolute;bottom:90px;left:15%;right:15%;z-index:4;background:#fff5f5}
+@media(max-width:700px){#experiment{margin:0 12px 20px;padding:25px 22px}header,footer{padding:16px 18px}h1{font-size:1.6rem}.scale{gap:4px}.scale label{padding:9px 2px}.ends{font-size:.75rem}.trial{padding:12px 12px 10px;gap:8px}.responses{gap:10px}.responses button{min-height:55px;padding:9px 10px;font-size:16px}.trial-question{font-size:17px}.trial-bottom button{min-width:110px}.trial-status{font-size:13px}body[data-screen=trial] .save-error{left:5%;right:5%}.actions button{width:100%}}
+@media(max-height:620px){.trial{gap:6px;padding-top:8px;padding-bottom:8px}.responses button{min-height:43px;padding:6px 12px}.trial-bottom{min-height:38px}.trial-bottom button{padding:7px 22px}.trial-question{font-size:18px}.practice-feedback{font-size:13px}}

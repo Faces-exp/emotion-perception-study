@@ -1,0 +1,9 @@
+private/
+results/
+dist/
+.env
+node_modules/
+*.zip
+*.avi
+*.xlsx
+.DS_Store
