@@ -84,4 +84,4 @@ node --test tests/*.test.mjs
 
 Исходные AVI, таблица, результаты и служебные файлы остаются в `private/` и `results/`, исключённых из публикации. Для обычной правки текста подготовка видео не нужна.
 
-[Отчёт 0.3](docs/VALIDATION_V03.md). Исторические проверки: [0.2](docs/VALIDATION_V02.md), [0.1](docs/VALIDATION.md).
+[Отчёт 0.3](docs/VALIDATION_V03.md): два полных онлайн-прохождения обеих групп и четыре CSV, полученные обратно из Drive. Пример: [48 основных проб](https://drive.google.com/file/d/1-BpjaDW137I7QGXkCwJCS0XgxHq5LcAP/view) и [одна строка участника](https://drive.google.com/file/d/1ReROJdc4wKvXAwFBQueESsgwwMXgJ8rJ/view). Исторические проверки: [0.2](docs/VALIDATION_V02.md), [0.1](docs/VALIDATION.md).
