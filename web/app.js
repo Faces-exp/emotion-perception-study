@@ -1,6 +1,6 @@
 import {RU,text} from './content/ru.js';
 import {EXPERIMENT} from './config/experiment.js';
-import {createStore} from './storage/index.js';
+import {createStore} from './storage/index.js?v=0.2.1';
 import {runVideoTrial} from './video-trial.js';
 import {$,root,show,button,screen,escapeHTML as h} from './ui.js';
 let store,config,session,jsPsych,stopped=false;
