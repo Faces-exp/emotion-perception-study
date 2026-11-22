@@ -38,3 +38,23 @@ body[data-screen=trial] #experiment,body[data-screen=fixation] #experiment,body[
 body[data-screen=trial] .save-error{position:absolute;bottom:90px;left:15%;right:15%;z-index:4;background:#fff5f5}
 @media(max-width:700px){#experiment{margin:0 12px 20px;padding:25px 22px}header,footer{padding:16px 18px}h1{font-size:1.6rem}.scale{gap:4px}.scale label{padding:9px 2px}.ends{font-size:.75rem}.trial{padding:12px 12px 10px;gap:8px}.responses{gap:10px}.responses button{min-height:55px;padding:9px 10px;font-size:16px}.trial-question{font-size:17px}.trial-bottom button{min-width:110px}.trial-status{font-size:13px}body[data-screen=trial] .save-error{left:5%;right:5%}.actions button{width:100%}}
 @media(max-height:620px){.trial{gap:6px;padding-top:8px;padding-bottom:8px}.responses button{min-height:43px;padding:6px 12px}.trial-bottom{min-height:38px}.trial-bottom button{padding:7px 22px}.trial-question{font-size:18px}.practice-feedback{font-size:13px}}
+/* Reading improvements are scoped to information screens. */
+body[data-screen=information] #experiment{overflow-wrap:break-word}
+body[data-screen=information] #experiment p{max-width:72ch;margin-block:1em}
+body[data-screen=information] .notice>p:first-child{margin-top:0}
+body[data-screen=information] .notice>p:last-child{margin-bottom:0}
+body[data-screen=information] .material-sets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+body[data-screen=information] .material-set{margin:0!important;padding:13px 15px;border:1px solid #b9c8d1;border-radius:6px;background:#eef4f7}
+body[data-screen=information] .allocation-choice{display:flex;align-items:flex-start;gap:12px;margin:0}
+body[data-screen=information] .allocation-choice input{flex:0 0 auto;margin:5px 0 0}
+body[data-screen=information] .allocation-choice>span{min-width:0}
+body[data-screen=information] .allocation-line{display:block}
+body[data-screen=information] .allocation-line+.allocation-line{margin-top:6px}
+body[data-screen=information] #scale-form fieldset{min-inline-size:0}
+body[data-screen=information] .ends{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;line-height:1.4}
+body[data-screen=information] .ends span{min-width:0;overflow-wrap:break-word}
+body[data-screen=information] .ends span:last-child{text-align:right}
+#withdraw-dialog{max-height:90dvh;overflow-y:auto}
+#withdraw-dialog p{margin-block:1em}
+.practice-feedback>.feedback-line{display:block}
+@media(max-width:700px){body[data-screen=information] header{flex-direction:column;align-items:flex-start;gap:8px}body[data-screen=information] #experiment p{margin-block:1em}body[data-screen=information] .material-sets{grid-template-columns:1fr}}

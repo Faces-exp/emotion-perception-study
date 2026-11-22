@@ -1,4 +1,4 @@
-import {RU,text} from './content/ru.js';
+import {RU,text} from './content/ru.js?copy=20261122';
 import {EXPERIMENT} from './config/experiment.js';
 import {VideoClock} from './timing.js';
 import {$,show,button,escapeHTML,wait,frame,browserFamily} from './ui.js';
