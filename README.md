@@ -4,12 +4,14 @@
 
 ## Ссылки
 
-- [Эксперимент для участников](https://shalygin1.github.io/emotion-perception-study/).
-- [Тестовая версия](https://shalygin1.github.io/emotion-perception-study/?test=1): отдельный приём TEST.
-- [Исходный код](https://github.com/Shalygin1/emotion-perception-study).
-- [Все формулировки](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js).
-- [Настройки процедуры](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/config/experiment.js).
-- [Список стимулов, правильные ответы и длительности](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/stimuli/manifest.json).
+- [Рабочая ссылка: высокая власть](https://faces-exp.github.io/emotion-perception-study/?condition=high_power).
+- [Рабочая ссылка: отсутствие власти](https://faces-exp.github.io/emotion-perception-study/?condition=no_power).
+- [Общая ссылка со случайным назначением](https://faces-exp.github.io/emotion-perception-study/).
+- [Тестовая версия](https://faces-exp.github.io/emotion-perception-study/?test=1): отдельный приём TEST.
+- [Исходный код](https://github.com/Faces-exp/emotion-perception-study).
+- [Все формулировки](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js).
+- [Настройки процедуры](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/config/experiment.js).
+- [Список стимулов, правильные ответы и длительности](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/stimuli/manifest.json).
 - [Основные результаты Google Drive](https://drive.google.com/drive/folders/1TxFljuy9Km1ITlvo1PeOgItTF5Bg5WtB).
 - [Отдельная папка TEST](https://drive.google.com/drive/folders/1yqkxr8K6_disJl3wnDk52D_Vb09zqoo6).
 
@@ -17,28 +19,28 @@
 
 ## Как редактировать тексты и публиковать изменения
 
-1. Под аккаунтом `Shalygin1` откройте [файл текстов](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) и нажмите карандаш **Edit this file** (иногда он находится в меню `…`).
+1. Под аккаунтом `Faces-exp` откройте [файл текстов](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) и нажмите карандаш **Edit this file** (иногда он находится в меню `…`).
 2. Меняйте текст в кавычках. Сохраняйте имена ключей, запятые, кавычки, HTML-теги и подстановки `{date}`, `{contacts}`. Не меняйте `key` трёх вопросов — это имена переменных анализа.
 3. Нажмите **Commit changes** и сохраните в ветке `main`.
 4. GitHub Pages автоматически публикует `main`, `/ (root)`. Дождитесь завершения **pages build and deployment** во вкладке **Actions**. Обновите страницу через **Cmd+Shift+R**. После обычной правки текста отдельная сборка не требуется.
-5. Проверьте через ссылку с `?test=1`. Для выбора тестовой группы допустимы `&condition=high_power` и `&condition=no_power`. В обычном прохождении группа назначается случайно один раз; параметр `condition` без `test=1` не задаёт группу.
+5. Рабочие ссылки `?condition=high_power` и `?condition=no_power` фиксируют соответствующую группу и отправляют результаты в основную папку Google Drive (`is_test=false`). Для отдельных технических проверок добавляйте `&test=1`: только тогда файлы направляются в TEST. Общая ссылка без `condition` сохраняет прежнее случайное назначение 50/50.
 
 ## Где менять каждый экран
 
 | Экран | Ключи в едином файле | Ссылка |
 |---|---|---|
-| Приветствие и информированное согласие | `RU.welcome` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Общая инструкция о студенческом проекте | `RU.role.commonTitle`, `commonInstruction` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Полномочия высокой власти | `RU.role.highTitle`, `highInstruction` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Отсутствие власти | `RU.role.lowTitle`, `lowInstruction` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Контекст, два набора и условность ситуации | `RU.role.context`, `simulationNote` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Распределение, варианты, кнопки | `RU.role.allocationHighInstruction`, `allocationA`, `allocationB`, `highButton`, `lowDecision`, `lowFinal`, `lowButton` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Подтверждение и фактическое распределение | `RU.role.highConfirmed`, `lowConfirmed`, `resultA`, `resultB`, `highConsequence`, `lowConsequence` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Ровно три финальных вопроса и собственные крайние значения шкал | `RU.finalSurvey.questions`: `text`, `left`, `right` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Инструкции к тренировке, основной части и перерывы | `RU.instructions` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Вопрос к видео, ответы и обратная связь | `RU.trial`, `RU.answers` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Дебрифинг и решение об использовании ответов | `RU.debrief` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
-| Кнопки, сохранение, завершение и ошибки | `RU.buttons`, `RU.saving`, `RU.complete`, `RU.withdraw`, `RU.errors`, `RU.server` | [Редактировать](https://github.com/Shalygin1/emotion-perception-study/blob/main/web/content/ru.js) |
+| Приветствие и информированное согласие | `RU.welcome` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Общая инструкция о студенческом проекте | `RU.role.commonTitle`, `commonInstruction` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Полномочия высокой власти | `RU.role.highTitle`, `highInstruction` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Отсутствие власти | `RU.role.lowTitle`, `lowInstruction` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Контекст, два набора и условность ситуации | `RU.role.context`, `simulationNote` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Распределение, варианты, кнопки | `RU.role.allocationHighInstruction`, `allocationA`, `allocationB`, `highButton`, `lowDecision`, `lowFinal`, `lowButton` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Подтверждение и фактическое распределение | `RU.role.highConfirmed`, `lowConfirmed`, `resultA`, `resultB`, `highConsequence`, `lowConsequence` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Ровно три финальных вопроса и собственные крайние значения шкал | `RU.finalSurvey.questions`: `text`, `left`, `right` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Инструкции к тренировке, основной части и перерывы | `RU.instructions` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Вопрос к видео, ответы и обратная связь | `RU.trial`, `RU.answers` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Дебрифинг и решение об использовании ответов | `RU.debrief` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
+| Кнопки, сохранение, завершение и ошибки | `RU.buttons`, `RU.saving`, `RU.complete`, `RU.withdraw`, `RU.errors`, `RU.server` | [Редактировать](https://github.com/Faces-exp/emotion-perception-study/blob/main/web/content/ru.js) |
 
 `commonInstruction`, `highInstruction`, `lowInstruction`, `context`, `allocationHighInstruction` — массивы абзацев: каждый элемент показывается отдельным абзацем. Сайт действительно строит экраны из этих ресурсов; копий формулировок в логике экранов нет. Контакты Telegram и срок хранения берутся из настроек: @Not_4ever_Sour, @lovbls, @shrpnvsk; учебная цель; до 20 декабря 2026 года включительно, Москва.
 
@@ -46,7 +48,11 @@
 
 ## Порядок исследования 0.3
 
-Согласие и один ID → случайное условие → предложение полноэкранного режима → общая инструкция → отдельная ролевая инструкция с визуально выделенными полномочиями → распределение / ознакомление → подтверждение конкретного результата → 4 тренировки → 48 основных проб и прежние перерывы → три финальных вопроса → дебрифинг → добровольное решение об использовании ответов → два CSV и подтверждение.
+Согласие и один ID → условие из рабочей ссылки (либо случайное на общей ссылке) → предложение полноэкранного режима → общая инструкция → отдельная ролевая инструкция с визуально выделенными полномочиями → распределение / ознакомление → подтверждение конкретного результата → 4 тренировки → 48 основных проб и прежние перерывы → три финальных вопроса → дебрифинг → добровольное решение об использовании ответов → два CSV и подтверждение.
+
+При использовании двух рабочих ссылок распределение приглашений между условиями задают исследователи. Автоматического выравнивания числа завершивших нет. В данных `assignment_method=link_fixed`; для общей случайной ссылки остается `crypto_bernoulli_p_0.5`.
+
+Рабочие и тестовые сессии, а также две фиксированные группы сохраняются в браузере раздельно. Повторное открытие той же ссылки продолжает ее сессию и не меняет условие. Старая тестовая сессия не импортируется в рабочую ссылку; прежние записи в браузере не удаляются. Досрочный отказ также направляется в папку текущего режима: у рабочих ссылок это основная папка, у `test=1` — TEST.
 
 Предварительного опроса власти нет. Группа высокой власти самостоятельно выбирает `anna_A` или `anna_B` и утверждает обязательное решение. Без власти показывается готовое `anna_A`, доступна только кнопка ознакомления. Задание самого участника остаётся 4+48 при любом распределении.
 

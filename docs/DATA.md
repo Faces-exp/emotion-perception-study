@@ -1,6 +1,6 @@
 # Данные процедуры 0.3 · CSV
 
-Один participant_id задаётся в начале, condition назначается один раз. session_id — UUID сессии. Новые завершённые прохождения создают два CSV UTF-8 с BOM; UUID входит в имена, чтобы одинаковые participant_id не перезаписывали файлы.
+Один participant_id задаётся в начале, condition назначается один раз по рабочей ссылке high_power / no_power. На общей ссылке без condition остается случайное назначение 50/50. session_id — UUID сессии. Новые завершённые прохождения создают два CSV UTF-8 с BOM; UUID входит в имена, чтобы одинаковые participant_id не перезаписывали файлы. У рабочих ссылок is_test=false, run_mode=production и assignment_method=link_fixed; оба CSV и отметка досрочного отказа идут в основную папку Google Drive. Тестовый режим включается только параметром test=1 и сохраняется отдельно от рабочих сессий.
 
 ## trials_<participant_id>_<session_id>.csv
 

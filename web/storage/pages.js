@@ -6,10 +6,22 @@ const KEY='pedfe-session-v3';
 export class BrowserStore {
   constructor({storage=globalThis.localStorage,pipe=globalThis.DataPipe,fetcher=globalThis.fetch}={}){
     this.provider='datapipe';this.storage=storage;this.pipe=pipe;this.fetcher=fetcher.bind(globalThis);this.stream=null;
-    try{this.session=JSON.parse(storage.getItem(KEY)||'null');}catch{throw Error(RU.errors.storage);}
-    this.test=new URL(globalThis.location?.href||'http://localhost').searchParams.get('test')==='1';
+    const params=new URL(globalThis.location?.href||'http://localhost').searchParams;
+    this.test=params.get('test')==='1';
+    this.linkCondition=['high_power','no_power'].includes(params.get('condition'))?params.get('condition'):null;
+    this.storageKey=KEY+':'+(this.test?'test':'production')+':'+(this.linkCondition||'random');
+    try{
+      this.session=JSON.parse(storage.getItem(this.storageKey)||'null');
+      // Resume compatible real sessions, without importing an earlier TEST run.
+      if(!this.session&&!this.test){
+        const prior=JSON.parse(storage.getItem(KEY)||'null');
+        if(prior?.is_test===false&&prior.procedure_version===VERSION&&(!this.linkCondition||prior.condition===this.linkCondition)){
+          this.session=prior;this.persist();
+        }
+      }
+    }catch{throw Error(RU.errors.storage);}
   }
-  persist(){try{this.storage.setItem(KEY,JSON.stringify(this.session));}catch{throw Error(RU.errors.storage);}}
+  persist(){try{this.storage.setItem(this.storageKey,JSON.stringify(this.session));}catch{throw Error(RU.errors.storage);}}
   experimentID(){return this.session?.is_test?EXPERIMENT.datapipe.test_experiment_id:EXPERIMENT.datapipe.experiment_id;}
   startStream(){
     if(this.stream||!this.session||!['active','submitting'].includes(this.session.status)||!EXPERIMENT.datapipe.streaming||!this.experimentID()||!this.pipe)return;
@@ -34,9 +46,9 @@ export class BrowserStore {
       if(!this.pipe||!((this.test?EXPERIMENT.datapipe.test_experiment_id:EXPERIMENT.datapipe.experiment_id)))throw Error(RU.saving.notConfigured);
       const id=data.participant_id||'P'+crypto.randomUUID().replaceAll('-','').slice(0,12).toUpperCase();if(!/^[A-Za-z0-9_-]{6,32}$/.test(id))throw Error(RU.errors.invalidId);
       const m=await this.manifest(),sid=crypto.randomUUID();
-      const forced=this.test?new URL(location.href).searchParams.get('condition'):null;
-      const condition=['high_power','no_power'].includes(forced)?forced:(crypto.getRandomValues(new Uint8Array(1))[0]<128?'high_power':'no_power');
-      this.session={session_id:sid,participant_id:id,condition,assignment_method:forced?'test_only_forced':'crypto_bernoulli_p_0.5',started_at:new Date().toISOString(),status:'active',consent:true,adult:true,consent_version:VERSION,study_version:VERSION,procedure_version:VERSION,
+      const forced=this.linkCondition;
+      const condition=forced||(crypto.getRandomValues(new Uint8Array(1))[0]<128?'high_power':'no_power');
+      this.session={session_id:sid,participant_id:id,condition,assignment_method:forced?(this.test?'test_only_forced':'link_fixed'):'crypto_bernoulli_p_0.5',started_at:new Date().toISOString(),status:'active',consent:true,adult:true,consent_version:VERSION,study_version:VERSION,procedure_version:VERSION,
         retention_until:EXPERIMENT.retention_until,purpose:'educational',manifest_version:m.version,main:shuffle(m.main),practice:shuffle(m.practice),events:{},journal:[],is_test:this.test,media_mode:'pedfe',run_mode:this.test?'test':'production'};
       this.session.filename=resultFilenames(this.session).trials;
       this.persist();this.startStream();return this.publicSession();
@@ -74,7 +86,7 @@ export class BrowserStore {
       await this.stream?.close({submitted:true});this.stream=null;
       this.session.status='withdrawn';this.session.events={};this.session.journal=[];this.session.submissions=null;this.persist();return {deleted:false,withdrawn:true};
     }
-    if(path==='new-test'){if(!this.session.is_test)throw Error(RU.server.message_37);this.storage.removeItem(KEY);this.session=null;return {reset:true};}
+    if(path==='new-test'){if(!this.session.is_test)throw Error(RU.server.message_37);this.storage.removeItem(this.storageKey);this.session=null;return {reset:true};}
     throw Error(RU.errors.generic);
   }
   publicSession(){return {...this.session,active:true};}

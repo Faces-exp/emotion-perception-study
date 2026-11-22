@@ -13,5 +13,5 @@ export const EXPERIMENT = {
   retention_until: '2026-12-20T21:00:00.000Z',
   show_score_to_participant: false,
   datapipe: { experiment_id: 'S8hhv8UKdMAL', test_experiment_id: 'GmWHvL3FRD5T', streaming: true },
-  github: { repository: 'Shalygin1/emotion-perception-study', branch: 'main' }
+  github: { repository: 'Faces-exp/emotion-perception-study', branch: 'main' }
 };
