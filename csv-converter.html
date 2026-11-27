@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Развернуть CSV эксперимента</title>
+<style>
+:root{font:16px/1.55 Arial,Helvetica,sans-serif;color:#203342;background:#f0f3f6;color-scheme:light}*{box-sizing:border-box}body{margin:0}main{max-width:1140px;margin:36px auto;padding:0 24px 48px}h1{font-size:clamp(27px,4vw,38px);line-height:1.18;margin:10px 0 18px}h2{font-size:23px;margin:0 0 14px}h3{font-size:17px;margin:0 0 8px}p{margin:12px 0;max-width:80ch}.eyebrow{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#61788b}.card{background:#fff;border:1px solid #d8e1e8;border-radius:14px;padding:25px;margin-top:22px}.privacy{padding:15px 18px;background:#e5eef1;border-radius:8px;color:#294e5b}.hint{font-size:14px;color:#5a6f7f}.drop{padding:28px;text-align:center;border:2px dashed #a4b6c5;border-radius:10px;background:#f8fafc}.drop.drag{border-color:#2a6b88;background:#e7f0f6}button,select{font:inherit}button,.download{padding:11px 18px;border:1px solid #28536c;border-radius:7px;background:#28536c;color:#fff;font-weight:600;cursor:pointer}button:hover{background:#1d4054}.secondary{background:#fff;color:#28536c;border-color:#a4b6c5}.secondary:hover{background:#edf3f7}button:disabled{opacity:.5;cursor:default}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #3c8db3;outline-offset:3px}.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:17px}.file-list{padding:0;margin:18px 0 0;list-style:none}.file-list li{padding:8px 0;border-bottom:1px solid #e5ebf0;overflow-wrap:anywhere}.status{padding:12px 16px;border-radius:8px;background:#eaf3ec;margin-top:16px}.error{background:#fff0ee;color:#8b3028;white-space:pre-wrap}.notes{padding:14px 18px;background:#fff7e8;border:1px solid #e6d6b3;border-radius:8px;margin:16px 0}.notes p{margin:5px 0}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.stat{padding:17px;background:#f1f5f8;border-radius:9px}.stat strong{display:block;font-size:28px;line-height:1.2;margin-bottom:5px}.stat span{font-size:14px;color:#536b7b}.options{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin:18px 0}.options label{display:flex;gap:8px;align-items:center;flex-wrap:wrap}select{padding:8px 10px;border:1px solid #a6b6c4;border-radius:6px;background:#fff;max-width:100%}.table-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}.table-item{border:1px solid #d9e3ea;border-radius:9px;padding:17px;display:flex;flex-direction:column;align-items:flex-start}.table-item p{margin:0 0 13px;font-size:14px;color:#546b7a;flex:1}.table-item button{font-size:14px}.table-wrap{overflow:auto;max-height:500px;border:1px solid #dce5ec;border-radius:7px;margin-top:15px}table{border-collapse:collapse;font-size:13px;white-space:nowrap;width:100%}th,td{text-align:left;padding:9px 11px;border-bottom:1px solid #e1e8ee;border-right:1px solid #edf1f4;max-width:350px;overflow:hidden;text-overflow:ellipsis}th{position:sticky;top:0;background:#eaf0f5;z-index:1;font-weight:600}tbody tr:nth-child(even){background:#f8fafc}details{margin-top:20px}summary{cursor:pointer;font-weight:600}code{font-size:.92em;background:#edf2f6;padding:2px 5px;border-radius:4px}ol{padding-left:23px}li{margin:8px 0}[hidden]{display:none!important}footer{margin-top:24px;font-size:13px;color:#61798a}
+@media(max-width:650px){main{padding:0 14px 35px;margin-top:24px}.card{padding:19px}.drop{padding:22px 14px}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:24px}.table-list{grid-template-columns:1fr}.options{display:block}.options label{margin:12px 0}.actions button{flex:1}.actions{align-items:stretch}th,td{padding:8px}.card h2{font-size:21px}}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">Отдельный инструмент для уже собранных результатов</div>
+<h1>Развернуть CSV в обычные таблицы</h1>
+<p>Загрузите файлы результатов эксперимента. Списки внутри ячеек будут разложены на отдельные строки и столбцы. Основной файл для анализа сохранит правило: <strong>одна строка -- одна основная видеопроба</strong>.</p>
+<p class="privacy">Обработка происходит только в этом окне браузера. Содержимое файлов никуда не отправляется. Исходные файлы и работающий эксперимент не изменяются.</p>
+<section class="card" aria-labelledby="upload-title">
+<h2 id="upload-title">1. Добавьте результаты</h2>
+<p>Лучше добавить вместе <code>trials_…csv</code> и <code>participant_…csv</code>. Можно выбрать сразу несколько участников: файлы объединятся по коду сессии.</p>
+<div class="drop" id="drop-zone">
+<input type="file" id="files" multiple accept=".csv,.tsv,.txt,text/csv" hidden>
+<button type="button" id="choose">Добавить CSV-файлы</button>
+<p class="hint">Или перетащите их в эту область. Дополнительные файлы можно добавить позже.</p>
+</div>
+<ul class="file-list" id="file-list" aria-label="Добавленные файлы"></ul>
+<div class="actions"><button type="button" class="secondary" id="clear" hidden>Очистить список</button></div>
+<div id="status" role="status" hidden></div>
+</section>
+<section class="card" id="results" aria-labelledby="results-title" hidden>
+<h2 id="results-title">2. Скачайте готовые CSV</h2>
+<div class="stats" id="stats"></div>
+<div id="notes"></div>
+<div class="options"><label>Разделитель: <select id="delimiter"><option value=",">Запятая (,) -- для Jamovi</option><option value=";">Точка с запятой (;) -- для Excel</option><option value="tab">Табуляция</option></select></label></div>
+<div class="actions"><button type="button" id="download-main">Скачать основной файл для анализа</button><button type="button" class="secondary" id="download-all">Скачать все таблицы (ZIP)</button></div>
+<p class="hint">Все файлы -- UTF-8 с заголовками. Если Excel показывает все в одном столбце, выберите разделитель «Точка с запятой» либо откройте файл через «Данные → Из текста/CSV» с нужным разделителем.</p>
+<div class="table-list" id="table-list"></div>
+<h3 style="margin-top:25px">Предпросмотр</h3>
+<label for="preview-table">Таблица:</label> <select id="preview-table"></select>
+<p class="hint" id="preview-note"></p>
+<div class="table-wrap"><table id="preview"></table></div>
+</section>
+<details class="card"><summary>Какие файлы получатся и что в них находится</summary>
+<ol>
+<li><strong>analysis.csv</strong> -- основной файл для Excel и Jamovi: отдельные основные пробы, ответы, правильность, RT, условие и три финальные оценки. Данные участника добавляются из соответствующего <code>participant_…csv</code>.</li>
+<li><strong>trials_full.csv</strong> -- те же основные пробы со всеми отдельными техническими столбцами; списков внутри ячеек уже нет.</li>
+<li><strong>participants.csv</strong> -- одна строка на участника с общими показателями.</li>
+<li><strong>practice.csv</strong> -- тренировочные пробы отдельно от основных.</li>
+<li><strong>playback_events.csv</strong> и <strong>technical_journal.csv</strong> -- отдельные строки событий. Коды сессии, фаза и номер пробы связывают их с результатами.</li>
+<li><strong>orders.csv</strong>, <strong>instructions.csv</strong> и дополнительные таблицы -- развернутые порядки стимулов, подтверждения инструкций и остальные вложенные данные.</li>
+</ol>
+<p>Если загружен только <code>participant_…csv</code>, ответы на 48 основных проб из него восстановить нельзя: нужен также <code>trials_…csv</code>. Конвертер покажет имеющиеся данные, не создавая вымышленных ответов.</p>
+<p>Конвертер не пересчитывает RT и правильность, не меняет экспериментальное условие и не исключает тестовые или незавершенные записи. Совершенно одинаковые копии одной записи объединяются; разные версии одной и той же пробы вызывают понятное сообщение вместо произвольного выбора.</p>
+<p>Столбцы <code>_record_id</code> и <code>_parent_record_id</code> служат для связи технических таблиц. <code>columns.csv</code> в архиве описывает назначение столбцов.</p>
+<p>Эту HTML-страницу можно сохранить на компьютер и открывать без интернета.</p>
+</details>
+<footer>Этот инструмент добавлен отдельно. Он не подключается к эксперименту, DataPipe или Google Drive.</footer>
+</main>
+<script id="csv-core">
+const CSVFlat=(()=>{
+'use strict';
+const SURVEY=['perceived_social_power','emotion_recognition_ease','role_consideration'];
+const KNOWN={analysis:['Основные пробы для анализа','По одной строке на основную пробу с общими данными участника.'],trials_full:['Основные пробы: все столбцы','Сохранены все отдельные показатели исходных проб.'],participants:['Данные участников','Одна строка с общими сведениями и финальными оценками.'],practice:['Тренировочные пробы','Тренировка отделена от основного анализа.'],playback_events:['События воспроизведения','Каждое событие находится в собственной строке.'],technical_journal:['Технический журнал','Ответы и переходы «Далее» отдельными строками.'],orders:['Порядки стимулов','Одна позиция порядка -- одна строка.'],instructions:['Подтверждения инструкций','Одна подтвержденная инструкция -- одна строка.'],records:['Остальные записи','Развернутые записи, не относящиеся к основным пробам.']};
+const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+const empty=v=>v===undefined||v===null||v==='';
+const plain=()=>Object.create(null);
+const stable=v=>v&&typeof v==='object'?(Array.isArray(v)?'['+v.map(stable).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+stable(v[k])).join(',')+'}'):JSON.stringify(v);
+function parseCSV(input,name='CSV'){
+ let text=String(input).replace(/^\uFEFF/,'');let delimiter=null;
+ const directive=/^sep=([,;\t])\r?\n/i.exec(text);if(directive){delimiter=directive[1];text=text.slice(directive[0].length);}
+ if(!delimiter){const counts={',':0,';':0,'\t':0};let q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"')i++;else q=!q;}else if(!q){if(c==='\n'||c==='\r')break;if(own(counts,c))counts[c]++;}}delimiter=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];}
+ const matrix=[];let row=[],cell='',quoted=false,afterQuote=false,line=1;
+ function endCell(){row.push(cell);cell='';afterQuote=false;}
+ function endRow(){endCell();if(row.some(v=>v!==''))matrix.push({values:row,line});row=[];}
+ for(let i=0;i<text.length;i++){
+  const c=text[i];
+  if(quoted){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++;}else{quoted=false;afterQuote=true;}}else{cell+=c;if(c==='\n')line++;}continue;}
+  if(c===delimiter){endCell();continue;}
+  if(c==='\r'||c==='\n'){endRow();if(c==='\r'&&text[i+1]==='\n')i++;line++;continue;}
+  if(afterQuote){if(c===' '||c==='\t')continue;throw Error(name+': неожиданный символ после кавычки, строка '+line+'.');}
+  if(c==='"'){if(cell!=='')throw Error(name+': кавычка внутри неэкранированного поля, строка '+line+'.');quoted=true;}else cell+=c;
+ }
+ if(quoted)throw Error(name+': не закрыта кавычка CSV. Возможно, файл был обрезан.');
+ if(cell!==''||row.length||afterQuote)endRow();
+ if(!matrix.length)return {rows:[],headers:[],delimiter};
+ const headers=matrix.shift().values.map(h=>h.trim());
+ if(headers.some(h=>!h)||new Set(headers).size!==headers.length)throw Error(name+': пустые или повторяющиеся названия столбцов.');
+ const rows=matrix.map(({values,line},i)=>{if(values.length!==headers.length)throw Error(name+': в записи '+(i+1)+' '+values.length+' полей вместо '+headers.length+'. Проверьте разделитель и кавычки.');const r=plain();headers.forEach((h,k)=>r[h]=values[k]);return r;});
+ return {rows,headers,delimiter};
+}
+function structured(v,where,depth=0){
+ if(depth>24)throw Error(where+': слишком глубокая вложенность данных.');
+ if(typeof v==='string'){
+  const s=v.trim();if(s[0]!=='['&&s[0]!=='{')return v;
+  let parsed;try{parsed=JSON.parse(s);}catch{throw Error(where+': вложенный список или объект поврежден. Используйте исходный CSV, скачанный из эксперимента.');}
+  return structured(parsed,where,depth+1);
+ }
+ if(Array.isArray(v))return v.map((x,i)=>structured(x,where+'['+(i+1)+']',depth+1));
+ if(v&&typeof v==='object'){const out=plain();for(const [k,x] of Object.entries(v))out[k]=structured(x,where+'.'+k,depth+1);return out;}
+ return v;
+}
+function identity(r){return !empty(r.session_id)?'session:'+r.session_id:!empty(r.participant_id)?'participant:'+r.participant_id:null;}
+function isTrial(r){return !empty(r.trial_number)&&(!empty(r.stimulus_id)||!empty(r.video_filename)||!empty(r.stimulus_filename));}
+function phaseOf(r){return r.phase==='practice'||String(r.event_key||'').startsWith('practice-')?'practice':'main';}
+function convertFiles(files){
+ const notes=[],participants=[],main=[],practice=[],others=[],inputInfo=[];let duplicateCount=0;
+ const buckets={participants:new Map(),main:new Map(),practice:new Map(),others:new Map()};
+ function add(kind,row,source){
+  const id=identity(row),phase=kind==='main'?'main':kind==='practice'?'practice':'';
+  const key=kind==='participants'?id:(phase&&id?id+'|'+phase+'|'+row.trial_number:null);
+  const canonical=stable(row),map=buckets[kind];
+  if(key&&map.has(key)){const prev=map.get(key);if(prev.canonical!==canonical)throw Error('Найдены разные версии '+(phase?'пробы '+row.trial_number:'данных участника')+' для '+(row.participant_id||row.session_id)+'. Оставьте один согласованный набор исходных файлов.');prev.sources.add(source);duplicateCount++;return;}
+  const item={row,sources:new Set([source]),canonical};if(key)map.set(key,item);({participants,main,practice,others})[kind].push(item);
+ }
+ for(const file of files){
+  const parsed=parseCSV(file.text,file.name);inputInfo.push({name:file.name,rows:parsed.rows.length,delimiter:parsed.delimiter,encoding:file.encoding||'UTF-8'});
+  if(!parsed.rows.length)notes.push(file.name+': нет строк данных.');
+  for(let i=0;i<parsed.rows.length;i++){
+   const r=structured(parsed.rows[i],file.name+', запись '+(i+1));
+   if(isTrial(r)){const phase=phaseOf(r);if(empty(r.phase))r.phase=phase;add(phase,r,file.name);}
+   else if(identity(r)&&('status'in r||'practice_trials'in r||'perceived_social_power'in r||'n_main'in r)){add('participants',r,file.name);}
+   else add('others',r,file.name);
+  }
+ }
+ for(const item of participants){const list=item.row.practice_trials;if(Array.isArray(list))for(const r of list){if(!r||typeof r!=='object'||Array.isArray(r))throw Error('В practice_trials ожидалась запись тренировочной пробы.');const merged=Object.assign(plain(),context(item.row),r,{phase:'practice'});add('practice',merged,[...item.sources][0]);}}
+ if(duplicateCount)notes.push('Объединены совершенно одинаковые копии записей: '+duplicateCount+'.');
+ const bySession=new Map(),byParticipant=new Map();
+ for(const item of participants){const r=item.row;if(!empty(r.session_id))bySession.set(String(r.session_id),item);if(!empty(r.participant_id)){const id=String(r.participant_id);if(!byParticipant.has(id))byParticipant.set(id,[]);byParticipant.get(id).push(item);}}
+ function findParticipant(r){if(!empty(r.session_id)&&bySession.has(String(r.session_id)))return bySession.get(String(r.session_id));const list=byParticipant.get(String(r.participant_id))||[];if(list.length===1&&(empty(r.session_id)||empty(list[0].row.session_id)))return list[0];return null;}
+ const tables=new Map(),serial=new Map();
+ function table(name){if(!tables.has(name))tables.set(name,[]);return tables.get(name);}
+ function setCell(row,key,value){if(own(row,key)&&!empty(row[key])&&!empty(value)&&String(row[key])!==String(value))throw Error('Несогласованные значения поля '+key+'. Исходные данные не объединены автоматически.');row[key]=value??'';}
+ function cleanPath(path){return path.map(k=>String(k).replaceAll('%','%25').replaceAll('.','%2E')).join('.');}
+ function arrayTable(path){const key=path.join('.');if(key==='playback_events')return 'playback_events';if(key==='technical_journal')return 'technical_journal';if(key==='instruction_log')return 'instructions';if(key==='main_order'||key==='practice_order')return 'orders';return 'extra_'+key.replace(/[^a-zA-Z0-9_]/g,'_');}
+ function emit(name,data,ctx,source,parentId='',arrayIndex=null,field=''){
+  const n=(serial.get(name)||0)+1;serial.set(name,n);const row=Object.assign(plain(),ctx),rid=name+'_'+n;
+  row._record_id=rid;if(parentId)row._parent_record_id=parentId;if(arrayIndex!==null)row._array_index=arrayIndex;if(field)row._source_field=field;row._source_file=source;
+  function walk(value,path){
+   if(Array.isArray(value)){
+    const key=cleanPath(path);setCell(row,key+'_count',value.length);
+    if(name==='participants'&&path.length===1&&path[0]==='practice_trials')return;
+    const childName=arrayTable(path);const childContext=context(Object.assign(plain(),ctx,data));
+    value.forEach((item,index)=>{
+     let child=item&&typeof item==='object'&&!Array.isArray(item)?item:{value:item};
+     if(childName==='orders'){child={phase:path[0]==='practice_order'?'practice':'main',order_index:index+1,stimulus_id:item};}
+     emit(childName,child,childContext,source,rid,index+1,key);
+    });return;
+   }
+   if(value&&typeof value==='object'){
+    if(!Object.keys(value).length)setCell(row,cleanPath(path)+'.empty_object',true);
+    for(const [k,x] of Object.entries(value))walk(x,[...path,k]);return;
+   }
+   setCell(row,cleanPath(path),value);
+  }
+  for(const [k,v] of Object.entries(data))walk(v,[k]);
+  table(name).push(row);return row;
+ }
+ const participantFlat=new Map();for(const item of participants)participantFlat.set(item,emit('participants',item.row,context(item.row),[...item.sources].join(' | ')));
+ let missingParticipant=0;const analysis=[];
+ for(const item of main){
+  const r=item.row,pItem=findParticipant(r),p=pItem?.row||plain();
+  if(!pItem)missingParticipant++;
+  for(const key of ['participant_id','session_id','condition','is_test','study_version'])if(!empty(r[key])&&!empty(p[key])&&String(r[key])!==String(p[key]))throw Error('Файлы проб и участника не согласованы по полю '+key+'.');
+  const full=emit('trials_full',r,context(r),[...item.sources].join(' | ')),a=plain();
+  const choose=(...values)=>values.find(v=>!empty(v))??'';
+  Object.assign(a,{participant_id:choose(r.participant_id,p.participant_id),session_id:choose(r.session_id,p.session_id),condition:choose(r.condition,p.condition),trial_number:r.trial_number,video_filename:choose(r.video_filename,r.stimulus_filename),emotion:r.emotion??'',authenticity:choose(r.authenticity,r.stimulus_type),response:r.response??'',correct:r.correct??'',video_duration_ms:choose(r.video_duration_ms,r.media_duration_ms),reaction_time_ms:choose(r.reaction_time_ms,r.rt_ms),response_during_video:choose(r.response_during_video,r.response_before_end),response_after_end_ms:r.response_after_end_ms??'',trial_completed_correctly:r.trial_completed_correctly??'',quality_flag:r.quality_flag??''});
+  for(const key of SURVEY)a[key]=choose(r[key],p[key]);
+  for(const key of ['allocation','allocation_action','anna_video_count','mikhail_video_count','n_correct','accuracy_percent'])a[key]=choose(p[key],r[key]);
+  Object.assign(a,{status:choose(p.status,r.session_status),is_test:choose(r.is_test,p.is_test),study_version:choose(r.study_version,p.study_version),_record_id:full._record_id,_source_file:[...item.sources,...(pItem?.sources||[])].join(' | ')});
+  analysis.push(a);
+ }
+ for(const item of practice)emit('practice',item.row,context(item.row),[...item.sources].join(' | '));
+ for(const item of others)emit('records',item.row,context(item.row),[...item.sources].join(' | '));
+ if(analysis.length)tables.set('analysis',analysis);
+ if(missingParticipant)notes.push('Для '+missingParticipant+' основных проб не найден файл participant. Их ответы сохранены; добавьте соответствующий participant_…csv, чтобы присоединить финальные оценки.');
+ if(!main.length&&participants.length)notes.push('Основных ответов в загруженных файлах нет. Добавьте trials_…csv: порядок main_order содержит только имена стимулов, а не ответы на 48 проб.');
+ const testSessions=new Set();for(const item of [...participants,...main,...practice])if(String(item.row.is_test).toLowerCase()==='true')testSessions.add(identity(item.row)||[...item.sources][0]);
+ if(testSessions.size)notes.push('Найдены тестовые сессии: '+testSessions.size+'. Они сохранены и не исключены автоматически.');
+ const incomplete=participants.filter(p=>!empty(p.row.status)&&p.row.status!=='complete').length;if(incomplete)notes.push('Сессий со статусом, отличным от complete: '+incomplete+'. Их данные сохранены отдельно, без автоматического исключения.');
+ const order=['analysis','trials_full','participants','practice','playback_events','technical_journal','orders','instructions','records'];
+ const output=[...tables].filter(([,rows])=>rows.length).sort(([a],[b])=>{const x=order.indexOf(a),y=order.indexOf(b);return (x<0?99:x)-(y<0?99:y)||a.localeCompare(b);}).map(([name,rows])=>({name,filename:name+'.csv',title:KNOWN[name]?.[0]||'Дополнительные вложенные данные: '+name,description:KNOWN[name]?.[1]||'Вложенный список разложен на отдельные строки с привязкой к исходной записи.',rows,columns:columns(rows)}));
+ for(const t of output)for(const row of t.rows)for(const value of Object.values(row))if(value!==null&&typeof value==='object')throw Error('Внутренняя ошибка: нераскрытое вложенное значение.');
+ const sessions=new Set([...participants,...main,...practice].map(item=>identity(item.row)).filter(Boolean));
+ return {tables:output,notes,inputInfo,counts:{main:main.length,practice:practice.length,participants:participants.length,sessions:sessions.size,files:files.length},primary:analysis.length?'analysis':output.find(t=>t.name==='participants')?.name||output[0]?.name||null};
+}
+function context(r){const out=plain();for(const k of ['participant_id','session_id','condition','phase','trial_number','stimulus_id'])if(!empty(r[k]))out[k]=r[k];return out;}
+function columns(rows){return [...new Set(rows.flatMap(r=>Object.keys(r)))];}
+function toCSV(rows,delimiter=','){
+ if(![',',';','\t'].includes(delimiter))throw Error('Неизвестный разделитель.');
+ const keys=columns(rows),numeric=/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
+ const cell=value=>{let s=empty(value)?'':String(value);if(/^[=+@\-\t\r]/.test(s)&&!numeric.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};
+ return '\uFEFF'+[keys.map(cell).join(delimiter),...rows.map(r=>keys.map(k=>cell(r[k])).join(delimiter))].join('\r\n');
+}
+function decodeBytes(bytes){
+ const a=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes);let encoding='utf-8';
+ if(a[0]===255&&a[1]===254)encoding='utf-16le';else if(a[0]===254&&a[1]===255)encoding='utf-16be';
+ try{return {text:new TextDecoder(encoding,{fatal:true}).decode(a),encoding};}catch{if(encoding!=='utf-8')throw Error('Не удалось прочитать кодировку файла.');return {text:new TextDecoder('windows-1251').decode(a),encoding:'windows-1251'};}
+}
+const meanings={participant_id:'Анонимный код участника',session_id:'Уникальный код сессии',condition:'Экспериментальное условие: high_power / no_power',trial_number:'Номер пробы в своей фазе',phase:'Фаза: main / practice',video_filename:'Оригинальное имя видеозаписи',authenticity:'Метка PEDFE: genuine / posed',response:'Ответ участника: genuine / posed',correct:'Правильность: 0 или 1',reaction_time_ms:'Время реакции от фактического начала видео, мс',video_duration_ms:'Продолжительность видеозаписи, мс',response_during_video:'Ответ до окончания видео',response_after_end_ms:'Задержка ответа после окончания, мс',perceived_social_power:'Финальная оценка переживания социальной власти, 1–7',emotion_recognition_ease:'Финальная оценка легкости определения эмоции, 1–7',role_consideration:'Финальная оценка учета своей роли, 1–7',accuracy_percent:'Сохраненный процент правильных ответов из исходного файла',status:'Сохраненный статус прохождения',is_test:'Признак тестового прохождения',quality_flag:'Исходная отметка технической проверки',_record_id:'Код строки конвертера для связи таблиц',_parent_record_id:'Код родительской строки',_array_index:'Позиция во вложенном списке, от 1',_source_file:'Исходный файл',_source_field:'Исходное поле вложенного списка'};
+function dictionary(result){return result.tables.flatMap(t=>t.columns.map(column=>({table:t.filename,column,description:meanings[column]||(column.endsWith('_count')?'Количество элементов исходного вложенного списка':'Исходное поле; значение сохранено без пересчета')})));}
+function crc32(bytes){let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let k=0;k<8;k++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;}
+function zipStore(files){
+ const encoder=new TextEncoder(),chunks=[],central=[];let offset=0,centralSize=0;
+ function header(n){const a=new Uint8Array(n);return {a,v:new DataView(a.buffer)};}
+ for(const f of files){const name=encoder.encode(f.name),data=encoder.encode(f.text),crc=crc32(data),h=header(30),c=header(46);h.v.setUint32(0,0x04034b50,true);h.v.setUint16(4,20,true);h.v.setUint16(6,0x800,true);h.v.setUint16(12,33,true);h.v.setUint32(14,crc,true);h.v.setUint32(18,data.length,true);h.v.setUint32(22,data.length,true);h.v.setUint16(26,name.length,true);chunks.push(h.a,name,data);
+ c.v.setUint32(0,0x02014b50,true);c.v.setUint16(4,20,true);c.v.setUint16(6,20,true);c.v.setUint16(8,0x800,true);c.v.setUint16(14,33,true);c.v.setUint32(16,crc,true);c.v.setUint32(20,data.length,true);c.v.setUint32(24,data.length,true);c.v.setUint16(28,name.length,true);c.v.setUint32(42,offset,true);central.push(c.a,name);centralSize+=46+name.length;offset+=30+name.length+data.length;}
+ const end=header(22);end.v.setUint32(0,0x06054b50,true);end.v.setUint16(8,files.length,true);end.v.setUint16(10,files.length,true);end.v.setUint32(12,centralSize,true);end.v.setUint32(16,offset,true);const out=new Uint8Array(offset+centralSize+22);let pos=0;for(const a of [...chunks,...central,end.a]){out.set(a,pos);pos+=a.length;}return out;
+}
+return {parseCSV,structured,convertFiles,toCSV,decodeBytes,dictionary,zipStore};
+})();
+</script>
+<script id="csv-ui">
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s),selected=new Map();let result=null,busy=false;
+const make=(tag,text,className)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(className)e.className=className;return e;};
+function status(text,error=false){const e=$('#status');e.hidden=false;e.className='status'+(error?' error':'');e.textContent=text;}
+function delimiter(){return $('#delimiter').value==='tab'?'\t':$('#delimiter').value;}
+function download(name,data,type){const u=URL.createObjectURL(new Blob([data],{type})),a=make('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);}
+function saveTable(t){download(t.filename,CSVFlat.toCSV(t.rows,delimiter()),'text/csv;charset=utf-8');}
+function preview(){const t=result?.tables.find(t=>t.name===$('#preview-table').value);const table=$('#preview');table.replaceChildren();if(!t)return;const head=make('thead'),hr=make('tr');for(const k of t.columns)hr.append(make('th',k));head.append(hr);const body=make('tbody');for(const r of t.rows.slice(0,15)){const tr=make('tr');for(const k of t.columns){const td=make('td',r[k]??'');td.title=String(r[k]??'');tr.append(td);}body.append(tr);}table.append(head,body);$('#preview-note').textContent='Показаны первые '+Math.min(15,t.rows.length)+' из '+t.rows.length+' строк. В скачанном CSV будут все строки.';}
+function render(){
+ $('#file-list').replaceChildren(...[...selected.values()].map(f=>make('li',f.name+' · '+Math.round(f.bytes.length/1024)+' КБ · '+f.encoding)));$('#clear').hidden=!selected.size;
+ $('#results').hidden=!result?.tables.length;if(!result?.tables.length)return;
+ $('#stats').replaceChildren(...[[result.counts.main,'основных проб'],[result.counts.sessions,'сессий'],[result.counts.practice,'тренировочных проб']].map(([n,label])=>{const d=make('div',undefined,'stat');d.append(make('strong',n),make('span',label));return d;}));
+ const notes=$('#notes');notes.replaceChildren();if(result.notes.length){const d=make('div',undefined,'notes');for(const n of result.notes)d.append(make('p',n));notes.append(d);}
+ $('#table-list').replaceChildren(...result.tables.map(t=>{const d=make('div',undefined,'table-item'),b=make('button','Скачать '+t.filename);b.type='button';b.addEventListener('click',()=>saveTable(t));d.append(make('h3',t.title),make('p',t.rows.length+' строк · '+t.columns.length+' столбцов. '+t.description),b);return d;}));
+ $('#preview-table').replaceChildren(...result.tables.map(t=>{const o=make('option',t.filename+' ('+t.rows.length+' строк)');o.value=t.name;return o;}));$('#preview-table').value=result.primary;$('#download-main').textContent=result.primary==='analysis'?'Скачать основной файл для анализа':'Скачать '+result.tables.find(t=>t.name===result.primary).filename;preview();
+}
+async function addFiles(list){
+ if(busy)return;busy=true;$('#choose').disabled=true;$('#clear').disabled=true;status('Читаем и разворачиваем файлы…');
+ try{for(const f of list){if(!/\.(csv|tsv|txt)$/i.test(f.name))throw Error('Выберите CSV-файлы результатов. Файл '+f.name+' не добавлен.');const bytes=new Uint8Array(await f.arrayBuffer()),decoded=CSVFlat.decodeBytes(bytes),key=f.name+'|'+f.size+'|'+f.lastModified;selected.set(key,{name:f.name,bytes,...decoded});}
+  result=CSVFlat.convertFiles([...selected.values()]);render();status(result.tables.length?'Готово. В таблицах нет списков или объектов внутри ячеек. Исходные файлы сохранены без изменений.':'В файлах нет строк данных.');
+ }catch(e){result=null;$('#results').hidden=true;render();status(e.message||String(e),true);}finally{busy=false;$('#choose').disabled=false;$('#clear').disabled=false;$('#files').value='';}
+}
+$('#choose').addEventListener('click',()=>$('#files').click());$('#files').addEventListener('change',e=>addFiles(e.target.files));$('#clear').addEventListener('click',()=>{selected.clear();result=null;render();$('#status').hidden=true;});
+const drop=$('#drop-zone');for(const name of ['dragenter','dragover'])drop.addEventListener(name,e=>{e.preventDefault();drop.classList.add('drag');});for(const name of ['dragleave','drop'])drop.addEventListener(name,e=>{e.preventDefault();drop.classList.remove('drag');});drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+$('#preview-table').addEventListener('change',preview);$('#download-main').addEventListener('click',()=>{const t=result?.tables.find(t=>t.name===result.primary);if(t)saveTable(t);});$('#download-all').addEventListener('click',()=>{if(!result)return;const files=result.tables.map(t=>({name:t.filename,text:CSVFlat.toCSV(t.rows,delimiter())}));files.push({name:'columns.csv',text:CSVFlat.toCSV(CSVFlat.dictionary(result),delimiter())});download('expanded-results.zip',CSVFlat.zipStore(files),'application/zip');});
+})();
+</script>
+</body>
+</html>
