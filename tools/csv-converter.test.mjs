@@ -48,6 +48,11 @@ test('Trials-only input retains all trials without inventing consent or final ra
 test('Repeated participant IDs with different session IDs receive different files',()=>{
  const a=fixture('s1','SAME_ID'),b=fixture('s2','SAME_ID','no_power');b.participant.perceived_social_power=1;b.files[1]=input('participant_b.csv',[b.participant]);const r=core.convertFiles([...a.files,...b.files]);assert.equal(r.sessions.length,2);for(const s of r.sessions)for(const row of s.rows)assert.equal(row.perceived_social_power,s.session_id==='s1'?'6':'1');assert.notEqual(r.sessions[0].filename,r.sessions[1].filename);
 });
+test('Group labels follow saved conditions and never infer group from survey scores',()=>{
+ const cases=[['high_power','Высокая власть'],['no_power','Низкая власть (отсутствие власти)'],['','Группа не указана'],['other','Неизвестная группа (other)']];
+ for(const [condition,label] of cases){const f=fixture('session-'+(condition||'empty'),'P',condition),r=core.convertFiles(f.files),s=r.sessions[0];assert.equal(s.condition,condition);assert.equal(s.condition_label,label);for(const row of s.rows)assert.equal(row.condition,condition);}
+ const f=fixture('trial-only','P','no_power');assert.equal(core.convertFiles([f.files[0]]).sessions[0].condition_label,'Низкая власть (отсутствие власти)');
+});
 test('Identical repeated inputs are deduplicated but conflicting trial versions are rejected',()=>{
  const f=fixture(),r=core.convertFiles([...f.files,...f.files]);assert.equal(r.sessions.length,1);assert.equal(r.sessions[0].rows.length,5);assert.ok(r.notes.length);
  assert.throws(()=>core.convertFiles([...f.files,input('changed.csv',[{...f.main[0],rt_ms:99}])]));
